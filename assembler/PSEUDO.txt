@@ -1,0 +1,33 @@
+===== Pseudocode =====
+
+1. Create parser object, passing .asm filename
+
+2. Create and initialize symbol table object
+    SP     = 0     = 0x0000
+    LCL    = 1     = 0x0001
+    ARG    = 2     = 0x0002
+    THIS   = 3     = 0x0003
+    THAT   = 4     = 0x0004
+    R0-R15 = 0-15  = 0x0000-0x000F
+    SCREEN = 16384 = 0x4000
+    KBD    = 24576 = 0x6000
+
+3. First pass (add labels to symbol table)
+    a. Parser -> next line
+    b. Parser -> is symbol declaration
+      True? Add to symbol table
+
+4. Second pass (parsing)
+    a. Parser -> reset
+    b. Parser -> next line
+
+===== Classes =====
+Parser:
+  Constructor: Open .asm file
+  reset: Reset reader back to line 0
+  next line: Advances to and parses the next line of the input file, skipping comment and empty lines
+  is symbol declaration: Returns true if line is a symbol declaration
+
+Translator:
+
+SymbolTable:
