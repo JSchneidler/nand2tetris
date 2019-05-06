@@ -11,8 +11,14 @@ class Parser {
     PUSH_INSTRUCTION,
     POP_INSTRUCTION,
     ARITHMETIC_INSTRUCTION,
-    NONE
+    IF_INSTRUCTION,
+    GOTO_INSTRUCTION,
+    FN_DECL_INSTRUCTION,
+    CALL_INSTRUCTION,
+    RETURN_INSTRUCTION,
+    NONE_INSTRUCTION
   };
+
   enum SEGMENTS {
     CONSTANT_SEGMENT,
     LOCAL_SEGMENT,
@@ -21,13 +27,16 @@ class Parser {
     THAT_SEGMENT,
     POINTER_SEGMENT,
     TEMP_SEGMENT,
-    STATIC_SEGMENT
+    STATIC_SEGMENT,
+    NONE_SEGMENT
   };
+
   struct Instruction {
     INSTRUCTION_TYPES type;
     SEGMENTS segment;
     short indexOrConstant;
     std::string op;
+    std::string symbol;
   };
 
   Parser(std::string inputFilename);
@@ -37,6 +46,7 @@ class Parser {
   void reset();
   void advanceInstruction();
   std::string getNextSymbolName();
+  std::string getRawInstruction();
 
  private:
   std::ifstream inputFile;
@@ -44,6 +54,7 @@ class Parser {
   bool _moreInstructions;
   Instruction currentInstruction;
   short nextSymbolId;
+  std::string rawInstruction;
   void parseInstruction(const std::string& line);
 };
 

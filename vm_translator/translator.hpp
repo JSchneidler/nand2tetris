@@ -9,6 +9,8 @@ class Translator {
   enum EQUALITY_CHECK_TYPE { EQ_CHECK, GT_CHECK, LT_CHECK };
 
   Translator();
+  void restartSymbolCounter();
+  void setSymbolPrefix(const std::string &prefix);
   static std::string initializeStackPointer(const short stackAddress);
   static std::string generatePushInstruction(
       const std::string &segmentStackPointer, const short index);
@@ -22,8 +24,15 @@ class Translator {
   static std::string generatePopPointerInstruction(const short index);
   std::string generatePopStaticInstruction(const short index);
   std::string generateArithmeticInstruction(const std::string &op);
-  void restartSymbolCounter();
-  void setSymbolPrefix(const std::string &prefix);
+  static std::string generateLabelInstruction(const std::string &symbol);
+  static std::string generateConditionalGotoInstruction(
+      const std::string &symbol);
+  static std::string generateGotoInstruction(const std::string &symbol);
+  static std::string generateFnDeclInstruction(const std::string &symbol,
+                                               const short localVars);
+  static std::string generateCallInstruction(const std::string &symbol,
+                                             const short pushedVars);
+  static std::string generateReturnInstruction(const std::string &symbol);
 
  private:
   short symbolCounter;

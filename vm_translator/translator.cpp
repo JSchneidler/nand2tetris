@@ -1,8 +1,6 @@
 #include "translator.hpp"
-
 #include <iostream>
 
-// Helper functions for generating ASM instructions
 static std::string makeLine(const std::string &string);
 static std::string selectStackPointer();
 static std::string incrementStackPointer();
@@ -18,6 +16,13 @@ static std::string selectRegister(const short r);
 
 Translator::Translator() : symbolCounter{0}, symbolPrefix{""} {}
 
+void Translator::restartSymbolCounter() { symbolCounter = 0; }
+
+void Translator::setSymbolPrefix(const std::string &prefix) {
+  symbolPrefix = prefix;
+}
+
+// Initializes stack pointer to a passed address
 std::string Translator::initializeStackPointer(const short stackAddress) {
   // Set stack pointer register to the stack's base address
   std::string instruction{selectRegister(stackAddress)};
@@ -203,12 +208,46 @@ std::string Translator::generateArithmeticInstruction(const std::string &op) {
   return instruction;
 }
 
-void Translator::restartSymbolCounter() { symbolCounter = 0; }
-
-void Translator::setSymbolPrefix(const std::string &prefix) {
-  symbolPrefix = prefix;
+std::string Translator::generateLabelInstruction(const std::string &symbol) {
+  return addLabel(symbol);
 }
 
+std::string Translator::generateConditionalGotoInstruction(
+    const std::string &symbol) {
+  // Pop value off stack into D register
+  std::string instruction{decrementStackPointer()};
+  instruction += selectStack();
+  instruction += makeLine("D=M");
+  // Select jump location
+  instruction += selectRegister(symbol);
+  // Jump if value is not equal to 0
+  instruction += makeLine("D;JNE");
+
+  return instruction;
+}
+
+std::string Translator::generateGotoInstruction(const std::string &symbol) {
+  return selectRegister(symbol) + makeLine("0;JMP");
+}
+
+std::string Translator::generateFnDeclInstruction(const std::string &symbol,
+                                                  const short localVars) {
+  // TODO
+  std::string instruction{addLabel(symbol)};
+
+  return instruction;
+}
+
+std::string Translator::generateCallInstruction(const std::string &symbol,
+                                                const short pushedVars) {
+  // TODO
+}
+
+std::string Translator::generateReturnInstruction(const std::string &symbol) {
+  // TODO
+}
+
+// Generates a unique symbol name
 std::string Translator::getNextSymbolName() {
   std::string symbolName{"_" + symbolPrefix + "." +
                          std::to_string(symbolCounter)};
@@ -216,25 +255,33 @@ std::string Translator::getNextSymbolName() {
   return symbolName;
 }
 
+// Generates a symbol based on set prefix and passed index
 std::string Translator::generateSymbol(const short index) {
   return symbolPrefix + "." + std::to_string(index);
 }
 
+// Appends a newline to the end of string. That's it.
 static std::string makeLine(const std::string &string) { return string + "\n"; }
 
+// Selects the SP register
 static std::string selectStackPointer() { return selectRegister("SP"); }
 
+// Selects the SP register and increases it by 1
 static std::string incrementStackPointer() {
   return selectStackPointer() + makeLine("M=M+1");
 }
+
+// Selects the SP register and decreases it by 1
 static std::string decrementStackPointer() {
   return selectStackPointer() + makeLine("M=M-1");
 }
 
+// Selects the register at the top of the stack
 static std::string selectStack() {
   return selectStackPointer() + makeLine("A=M");
 }
 
+// Generates a label
 static std::string addLabel(const std::string &string) {
   return makeLine("(" + string + ")");
 }
@@ -261,10 +308,12 @@ static std::string equalityCheck(
   return instruction;
 }
 
+// Selects a register denoted by the string
 static std::string selectRegister(const std::string &string) {
   return makeLine("@" + string);
 }
 
+// Selects a register number
 static std::string selectRegister(const short r) {
   return selectRegister(std::to_string(r));
 }

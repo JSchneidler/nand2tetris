@@ -12,7 +12,8 @@ Parser::Parser(std::string inputFilename)
           inputFilename.substr(0, inputFilename.find_first_of('.'))},
       _moreInstructions{true},
       currentInstruction{},
-      nextSymbolId{0} {
+      nextSymbolId{0},
+      rawInstruction{""} {
   if (!inputFile.good() || inputFile.bad() || inputFile.fail() ||
       !inputFile.is_open())
     throw std::invalid_argument("Invalid input file");
@@ -42,6 +43,7 @@ void Parser::advanceInstruction() {
   while (std::getline(inputFile, line)) {
     line = trimWhitespace(stripComment(line));
     if (line == "") continue;
+    rawInstruction = line;
     parseInstruction(line);
     return;
   }
@@ -54,39 +56,83 @@ std::string Parser::getNextSymbolName() {
   return symbolName;
 }
 
+std::string Parser::getRawInstruction() { return rawInstruction; }
+
 void Parser::parseInstruction(const std::string& line) {
   // Label instruction
   if (line.substr(0, 5) == "label") {
     currentInstruction.type = LABEL_INSTRUCTION;
+    currentInstruction.symbol = line.substr(6);
+    return;
   }
 
   // Push instruction
-  else if (line.substr(0, 4) == "push") {
+  if (line.substr(0, 4) == "push") {
     currentInstruction.type = PUSH_INSTRUCTION;
     size_t splitIndex = line.find_last_of(" ");
     currentInstruction.indexOrConstant = std::stoi(line.substr(splitIndex));
     currentInstruction.segment =
         parseSegmentType(line.substr(5, splitIndex - 5));
+    return;
   }
 
   // Pop instruction
-  else if (line.substr(0, 3) == "pop") {
+  if (line.substr(0, 3) == "pop") {
     currentInstruction.type = POP_INSTRUCTION;
     size_t splitIndex = line.find_last_of(" ");
     currentInstruction.indexOrConstant = std::stoi(line.substr(splitIndex));
     currentInstruction.segment =
         parseSegmentType(line.substr(4, splitIndex - 4));
+    return;
   }
 
   // Arithmetic/Logical instruction
-  else if (isArithmeticInstruction(line)) {
+  if (isArithmeticInstruction(line)) {
     currentInstruction.type = ARITHMETIC_INSTRUCTION;
     currentInstruction.op = line;
+    return;
+  }
+
+  // Conditional goto instruction
+  if (line.substr(0, 7) == "if-goto") {
+    currentInstruction.type = IF_INSTRUCTION;
+    currentInstruction.symbol = line.substr(8);
+    return;
+  }
+
+  // Goto instruction
+  if (line.substr(0, 4) == "goto") {
+    currentInstruction.type = GOTO_INSTRUCTION;
+    currentInstruction.symbol = line.substr(5);
+    return;
+  }
+
+  // Function declaration instruction
+  if (line.substr(0, 8) == "function") {
+    currentInstruction.type = FN_DECL_INSTRUCTION;
+    size_t splitIndex = line.find_last_of(" ");
+    currentInstruction.indexOrConstant = std::stoi(line.substr(splitIndex));
+    currentInstruction.symbol = line.substr(9, splitIndex - 9);
+    return;
+  }
+
+  // Function call instruction
+  if (line.substr(0, 4) == "call") {
+    currentInstruction.type = CALL_INSTRUCTION;
+    size_t splitIndex = line.find_last_of(" ");
+    currentInstruction.indexOrConstant = std::stoi(line.substr(splitIndex));
+    currentInstruction.symbol = line.substr(5, splitIndex - 5);
+    return;
+  }
+
+  // Function return instruction
+  if (line.substr(0, 6) == "return") {
+    currentInstruction.type = RETURN_INSTRUCTION;
+    return;
   }
 
   // Unknown instruction
-  else
-    currentInstruction.type = NONE;
+  currentInstruction.type = NONE_INSTRUCTION;
 }
 
 static std::string trimWhitespace(const std::string& string) {
@@ -119,4 +165,5 @@ static Parser::SEGMENTS parseSegmentType(const std::string& string) {
   if (string == "pointer") return Parser::POINTER_SEGMENT;
   if (string == "temp") return Parser::TEMP_SEGMENT;
   if (string == "static") return Parser::STATIC_SEGMENT;
+  return Parser::NONE_SEGMENT;
 }
