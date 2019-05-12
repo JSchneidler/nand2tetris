@@ -4,4 +4,5 @@
 *.tst
 *.out
 *.html
+*.vm
 demo/

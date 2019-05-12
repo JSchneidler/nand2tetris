@@ -1,20 +1,8 @@
 #include "translator.hpp"
 #include <iostream>
 
-static std::string makeLine(const std::string &string);
-static std::string selectStackPointer();
-static std::string incrementStackPointer();
-static std::string decrementStackPointer();
-static std::string selectStack();
-static std::string addLabel(const std::string &string);
-static std::string equalityCheck(
-    const Translator::EQUALITY_CHECK_TYPE checkType,
-    const std::string &symbolName);
-
-static std::string selectRegister(const std::string &string);
-static std::string selectRegister(const short r);
-
-Translator::Translator() : symbolCounter{0}, symbolPrefix{""} {}
+Translator::Translator()
+    : symbolCounter{0}, instructionCount{0}, symbolPrefix{""} {}
 
 void Translator::restartSymbolCounter() { symbolCounter = 0; }
 
@@ -58,6 +46,14 @@ std::string Translator::generatePushConstantInstruction(const short value) {
   // Push D reg on stack
   instruction += selectStack();
   instruction += makeLine("M=D");
+  instruction += incrementStackPointer();
+
+  return instruction;
+}
+
+std::string Translator::generatePushZeroToStackInstruction() {
+  std::string instruction{selectStack()};
+  instruction += makeLine("M=0");
   instruction += incrementStackPointer();
 
   return instruction;
@@ -232,19 +228,141 @@ std::string Translator::generateGotoInstruction(const std::string &symbol) {
 
 std::string Translator::generateFnDeclInstruction(const std::string &symbol,
                                                   const short localVars) {
-  // TODO
   std::string instruction{addLabel(symbol)};
+  for (short i = 0; i < localVars; i++) {
+    instruction += generatePushZeroToStackInstruction();
+  }
 
   return instruction;
 }
 
 std::string Translator::generateCallInstruction(const std::string &symbol,
-                                                const short pushedVars) {
-  // TODO
+                                                const short pushedVars = 0) {
+  std::string returnAddrSymbolName = getNextSymbolName();
+
+  // Push return address
+  std::string instruction{pushRegisterToStack(returnAddrSymbolName)};
+
+  // Push LCL
+  instruction += pushRegisterToStack("LCL");
+
+  // Push ARG
+  instruction += pushRegisterToStack("ARG");
+
+  // Push THIS
+  instruction += pushRegisterToStack("THIS");
+
+  // Push THAT
+  instruction += pushRegisterToStack("THAT");
+
+  // Reposition ARG (ARG = SP-n-5)
+  instruction += selectStackPointer();
+  instruction += makeLine("D=M");
+  instruction += selectRegister(pushedVars);
+  instruction += makeLine("D=D-A");
+  instruction += selectRegister(5);
+  instruction += makeLine("D=D-A");
+  instruction += selectRegister("ARG");
+  instruction += makeLine("M=D");
+
+  // Reposition LCL (LCL = SP)
+  instruction += selectStackPointer();
+  instruction += makeLine("D=M");
+  instruction += selectRegister("LCL");
+  instruction += makeLine("M=D");
+
+  // Goto f
+  instruction += generateGotoInstruction(symbol);
+
+  // Label for return address
+  instruction += addLabel(returnAddrSymbolName);
+
+  return instruction;
 }
 
-std::string Translator::generateReturnInstruction(const std::string &symbol) {
-  // TODO
+std::string Translator::generateReturnInstruction() {
+  // Temporarily store top of frame in R13
+  std::string instruction{selectRegister("LCL")};
+  instruction += makeLine("D=M");
+  instruction += selectRegister("R13");
+  instruction += makeLine("M=D");
+
+  // TODO FIX
+  // Temporarily store return address in R14
+  instruction += selectRegister(5);
+  instruction += makeLine("D=D-A");
+  instruction += makeLine("A=D");
+  instruction += makeLine("D=M");
+  instruction += selectRegister("R14");
+  instruction += makeLine("M=D");
+
+  // Swap arg with return value
+  instruction += decrementStackPointer();
+  instruction += selectStack();
+  instruction += makeLine("D=M");
+  instruction += selectRegister("ARG");
+  instruction += makeLine("A=M");
+  instruction += makeLine("M=D");
+
+  // Restore SP  = *(ARG + 1)
+  instruction += selectRegister("ARG");
+  instruction += makeLine("D=M+1");
+  instruction += selectRegister("SP");
+  instruction += makeLine("M=D");
+
+  // Restore THAT  = *(FRAME - 1)
+  instruction += selectRegister("R13");
+  instruction += makeLine("D=M-1");
+  instruction += makeLine("A=D");
+  instruction += makeLine("D=M");
+  instruction += selectRegister("THAT");
+  instruction += makeLine("M=D");
+
+  // Restore THIS  = *(FRAME - 2)
+  instruction += selectRegister(2);
+  instruction += makeLine("D=A");
+  instruction += selectRegister("R13");
+  instruction += makeLine("D=M-D");
+  instruction += makeLine("A=D");
+  instruction += makeLine("D=M");
+  instruction += selectRegister("THIS");
+  instruction += makeLine("M=D");
+
+  // Restore ARG  = *(FRAME - 3)
+  instruction += selectRegister(3);
+  instruction += makeLine("D=A");
+  instruction += selectRegister("R13");
+  instruction += makeLine("D=M-D");
+  instruction += makeLine("A=D");
+  instruction += makeLine("D=M");
+  instruction += selectRegister("ARG");
+  instruction += makeLine("M=D");
+
+  // Restore LCL  = *(FRAME - 4)
+  instruction += selectRegister(4);
+  instruction += makeLine("D=A");
+  instruction += selectRegister("R13");
+  instruction += makeLine("D=M-D");
+  instruction += makeLine("A=D");
+  instruction += makeLine("D=M");
+  instruction += selectRegister("LCL");
+  instruction += makeLine("M=D");
+
+  // Goto return address
+  instruction += selectRegister("R14");
+  instruction += makeLine("A=M");
+  instruction += makeLine("0;JMP");
+
+  return instruction;
+}
+
+short Translator::getCurrentInstructionNumber() { return instructionCount; }
+
+// Appends a newline to the end of string. That's it.
+std::string Translator::makeLine(const std::string &string,
+                                 bool dontIncreaseInstructionNumber) {
+  if (!dontIncreaseInstructionNumber) ++instructionCount;
+  return string + "\n";
 }
 
 // Generates a unique symbol name
@@ -260,35 +378,32 @@ std::string Translator::generateSymbol(const short index) {
   return symbolPrefix + "." + std::to_string(index);
 }
 
-// Appends a newline to the end of string. That's it.
-static std::string makeLine(const std::string &string) { return string + "\n"; }
-
 // Selects the SP register
-static std::string selectStackPointer() { return selectRegister("SP"); }
+std::string Translator::selectStackPointer() { return selectRegister("SP"); }
 
 // Selects the SP register and increases it by 1
-static std::string incrementStackPointer() {
+std::string Translator::incrementStackPointer() {
   return selectStackPointer() + makeLine("M=M+1");
 }
 
 // Selects the SP register and decreases it by 1
-static std::string decrementStackPointer() {
+std::string Translator::decrementStackPointer() {
   return selectStackPointer() + makeLine("M=M-1");
 }
 
 // Selects the register at the top of the stack
-static std::string selectStack() {
+std::string Translator::selectStack() {
   return selectStackPointer() + makeLine("A=M");
 }
 
 // Generates a label
-static std::string addLabel(const std::string &string) {
-  return makeLine("(" + string + ")");
+std::string Translator::addLabel(const std::string &string) {
+  return makeLine("(" + string + ")", true);
 }
 
-// This function assumes the two values were popped off the stack into D and M
-// already
-static std::string equalityCheck(
+// This function assumes one value was popped off the stack into D and M is the
+// new top of the stack (second value).
+std::string Translator::equalityCheck(
     const Translator::EQUALITY_CHECK_TYPE checkType,
     const std::string &symbolName) {
   std::string jumpType;
@@ -309,11 +424,21 @@ static std::string equalityCheck(
 }
 
 // Selects a register denoted by the string
-static std::string selectRegister(const std::string &string) {
+std::string Translator::selectRegister(const std::string &string) {
   return makeLine("@" + string);
 }
 
 // Selects a register number
-static std::string selectRegister(const short r) {
+std::string Translator::selectRegister(const short r) {
   return selectRegister(std::to_string(r));
+}
+
+std::string Translator::pushRegisterToStack(const std::string &string) {
+  std::string instruction{selectRegister(string)};
+  instruction += makeLine("D=M");
+  instruction += selectStack();
+  instruction += makeLine("M=D");
+  instruction += incrementStackPointer();
+
+  return instruction;
 }
