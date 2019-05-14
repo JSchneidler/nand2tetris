@@ -20,10 +20,10 @@ bool SymbolTable::contains(const std::string& symbol) const {
   }
 }
 
-void SymbolTable::addSymbol(const std::string& symbol, short value) {
+void SymbolTable::addSymbol(const std::string& symbol, int value) {
   map[symbol] = value;
 }
 
-short SymbolTable::getSymbolValue(const std::string& symbol) const {
+int SymbolTable::getSymbolValue(const std::string& symbol) const {
   return map.at(symbol);
 }

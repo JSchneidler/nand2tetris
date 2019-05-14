@@ -6,13 +6,13 @@
 #include "symboltable.hpp"
 
 static std::string generateOutputFilename(const std::string& inputFilename);
-static std::string to15BitBinaryString(const short number);
+static std::string to15BitBinaryString(const int number);
 
 int main(int, const char* argv[]) {
   if (!argv[1]) throw std::invalid_argument("No input file received");
 
-  const short VARIABLE_STACK_BASE_ADDRESS{0x10};
-  short nextVariableStackAddress{VARIABLE_STACK_BASE_ADDRESS};
+  const int VARIABLE_STACK_BASE_ADDRESS{0x10};
+  int nextVariableStackAddress{VARIABLE_STACK_BASE_ADDRESS};
 
   std::string inputFilename{argv[1]};
   std::string outputFilename{generateOutputFilename(inputFilename)};
@@ -42,7 +42,7 @@ int main(int, const char* argv[]) {
         ++nextVariableStackAddress;
       }
 
-      short symbolValue;
+      int symbolValue;
       if (!isdigit(parser.getCurrentInstructionSymbol()[0]))
         symbolValue =
             symbolTable.getSymbolValue(parser.getCurrentInstructionSymbol());
@@ -71,6 +71,6 @@ static std::string generateOutputFilename(const std::string& inputFilename) {
   return inputFilename.substr(0, filenameEnd) + ".hack";
 }
 
-static std::string to15BitBinaryString(const short number) {
+static std::string to15BitBinaryString(const int number) {
   return std::bitset<15>(number).to_string();
 }

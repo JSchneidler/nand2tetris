@@ -6,13 +6,13 @@
 
 class SymbolTable {
  private:
-  std::unordered_map<std::string, short> map;
+  std::unordered_map<std::string, int> map;
 
  public:
   SymbolTable();
   bool contains(const std::string& symbol) const;
-  void addSymbol(const std::string& symbol, short value);
-  short getSymbolValue(const std::string& symbol) const;
+  void addSymbol(const std::string& symbol, int value);
+  int getSymbolValue(const std::string& symbol) const;
 };
 
 #endif

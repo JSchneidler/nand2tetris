@@ -34,7 +34,7 @@ class Parser {
   struct Instruction {
     INSTRUCTION_TYPES type;
     SEGMENTS segment;
-    short indexOrConstant;
+    int indexOrConstant;
     std::string op;
     std::string symbol;
   };
@@ -45,7 +45,6 @@ class Parser {
   const Instruction& getCurrentInstruction() const;
   void reset();
   void advanceInstruction();
-  std::string getNextSymbolName();
   std::string getRawInstruction();
 
  private:
@@ -53,7 +52,6 @@ class Parser {
   std::string inputFileBasename;
   bool _moreInstructions;
   Instruction currentInstruction;
-  short nextSymbolId;
   std::string rawInstruction;
   void parseInstruction(const std::string& line);
 };

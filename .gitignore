@@ -5,4 +5,5 @@
 *.out
 *.html
 *.vm
+*.hack
 demo/

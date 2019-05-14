@@ -8,14 +8,14 @@ class SymbolTable {
  public:
   SymbolTable();
   bool contains(const std::string &symbolName) const;
-  void addSymbol(const std::string &symbolName, const short symbolValue);
-  short getSymbol(const std::string &symbolName) const;
+  void addSymbol(const std::string &symbolName, const int symbolValue);
+  int getSymbol(const std::string &symbolName) const;
 
   friend std::ostream& operator<<(std::ostream &os,
                                   const SymbolTable &symbolTable);
 
  private:
-  std::unordered_map<std::string, short> map;
+  std::unordered_map<std::string, int> map;
 };
 
 #endif

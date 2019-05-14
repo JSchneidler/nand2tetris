@@ -9,40 +9,41 @@ class Translator {
   enum EQUALITY_CHECK_TYPE { EQ_CHECK, GT_CHECK, LT_CHECK };
 
   Translator();
-  void restartSymbolCounter();
   void setSymbolPrefix(const std::string &prefix);
-  std::string initializeStackPointer(const short stackAddress);
+  std::string initializeStackPointer(const int stackAddress);
   std::string generatePushInstruction(const std::string &segmentStackPointer,
-                                      const short index);
-  std::string generatePushConstantInstruction(const short value);
+                                      const int index);
+  std::string generatePushConstantInstruction(const int value);
   std::string generatePushZeroToStackInstruction();
-  std::string generatePushTempInstruction(const short index);
-  std::string generatePushPointerInstruction(const short index);
-  std::string generatePushStaticInstruction(const short index);
+  std::string generatePushTempInstruction(const int index);
+  std::string generatePushPointerInstruction(const int index);
+  std::string generatePushStaticInstruction(const int index);
   std::string generatePopInstruction(const std::string &segmentStackPointer,
-                                     const short index);
-  std::string generatePopTempInstruction(const short index);
-  std::string generatePopPointerInstruction(const short index);
-  std::string generatePopStaticInstruction(const short index);
+                                     const int index);
+  std::string generatePopTempInstruction(const int index);
+  std::string generatePopPointerInstruction(const int index);
+  std::string generatePopStaticInstruction(const int index);
   std::string generateArithmeticInstruction(const std::string &op);
   std::string generateLabelInstruction(const std::string &symbol);
   std::string generateConditionalGotoInstruction(const std::string &symbol);
   std::string generateGotoInstruction(const std::string &symbol);
   std::string generateFnDeclInstruction(const std::string &symbol,
-                                        const short localVars);
+                                        const int localVars);
   std::string generateCallInstruction(const std::string &symbol,
-                                      const short pushedVars = 0);
+                                      const int pushedVars = 0);
   std::string generateReturnInstruction();
-  short getCurrentInstructionNumber();
+  int getCurrentInstructionNumber();
 
  private:
-  short symbolCounter;
-  short instructionCount;
+  int equalitySymbolId;
+  int callSymbolId;
+  int instructionCount;
   std::string symbolPrefix;
+  std::string currentFunctionName;
   std::string makeLine(const std::string &string,
                        bool dontIncreaseInstructionNumber = false);
-  std::string getNextSymbolName();
-  std::string generateSymbol(const short index);
+  std::string getNextEqualitySymbolId();
+  std::string generateStaticSymbol(const int index);
   std::string selectStackPointer();
   std::string incrementStackPointer();
   std::string decrementStackPointer();
@@ -51,8 +52,9 @@ class Translator {
   std::string equalityCheck(const Translator::EQUALITY_CHECK_TYPE checkType,
                             const std::string &symbolName);
   std::string selectRegister(const std::string &string);
-  std::string selectRegister(const short r);
+  std::string selectRegister(const int r);
   std::string pushRegisterToStack(const std::string &string);
+  void setCurrentFunctionName(const std::string &string);
 };
 
 #endif

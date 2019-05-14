@@ -13,16 +13,16 @@ bool SymbolTable::contains(const std::string &symbolName) const {
 }
 
 void SymbolTable::addSymbol(const std::string &symbolName,
-                            const short symbolValue) {
+                            const int symbolValue) {
   map[symbolName] = symbolValue;
 }
 
-short SymbolTable::getSymbol(const std::string &symbolName) const {
+int SymbolTable::getSymbol(const std::string &symbolName) const {
   return map.at(symbolName);
 }
 
 std::ostream &operator<<(std::ostream &os, const SymbolTable &symbolTable) {
-  for (std::pair<std::string, short> element : symbolTable.map) {
+  for (std::pair<std::string, int> element : symbolTable.map) {
     os << element.first << ": " << element.second << std::endl;
   }
   return os;

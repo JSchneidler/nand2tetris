@@ -12,7 +12,6 @@ Parser::Parser(std::string inputFilename)
           inputFilename.substr(0, inputFilename.find_first_of('.'))},
       _moreInstructions{true},
       currentInstruction{},
-      nextSymbolId{0},
       rawInstruction{""} {
   if (!inputFile.good() || inputFile.bad() || inputFile.fail() ||
       !inputFile.is_open())
@@ -48,12 +47,6 @@ void Parser::advanceInstruction() {
     return;
   }
   _moreInstructions = false;
-}
-
-std::string Parser::getNextSymbolName() {
-  std::string symbolName = inputFileBasename + std::to_string(nextSymbolId);
-  ++nextSymbolId;
-  return symbolName;
 }
 
 std::string Parser::getRawInstruction() { return rawInstruction; }
