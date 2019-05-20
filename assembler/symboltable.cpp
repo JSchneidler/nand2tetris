@@ -12,18 +12,25 @@ SymbolTable::SymbolTable()
       }) {}
 
 bool SymbolTable::contains(const std::string& symbol) const {
-  try {
-    map.at(symbol);
-    return true;
-  } catch (std::out_of_range& e) {
-    return false;
-  }
+  if (map.find(symbol) == map.end()) return false;
+  return true;
 }
 
 void SymbolTable::addSymbol(const std::string& symbol, int value) {
+  if (map.find(symbol) != map.end())
+    // TODO Throw more useful error
+    throw std::invalid_argument("Symbol already exists in table");
+
   map[symbol] = value;
 }
 
 int SymbolTable::getSymbolValue(const std::string& symbol) const {
   return map.at(symbol);
+}
+
+std::ostream& operator<<(std::ostream& os, const SymbolTable& symbolTable) {
+  for (std::pair<std::string, int> element : symbolTable.map) {
+    os << element.first << ": " << element.second << std::endl;
+  }
+  return os;
 }

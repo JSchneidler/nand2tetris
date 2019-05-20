@@ -6,4 +6,5 @@
 *.html
 *.vm
 *.hack
+*.asm
 demo/

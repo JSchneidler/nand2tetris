@@ -7,31 +7,33 @@
 
 class Parser {
  public:
-  enum instructionType { A_INSTRUCTION, C_INSTRUCTION, L_INSTRUCTION, NONE };
+  enum commandTypes { A_INSTRUCTION, C_INSTRUCTION, L_COMMAND, NONE };
 
   Parser(const std::string& inputFilename);
   ~Parser();
-  int getCurrentInstructionNumber() const;
-  std::string getCurrentInstructionSymbol() const;
-  std::string getCurrentInstructionCompField() const;
-  std::string getCurrentInstructionDestField() const;
-  std::string getCurrentInstructionJmpField() const;
+  int getInstructionNumber() const;
+  std::string getCommand() const;
+  std::string getCommandSymbol() const;
+  std::string getInstructionCompField() const;
+  std::string getInstructionDestField() const;
+  std::string getInstructionJmpField() const;
   void reset();
-  bool advanceToNextInstruction();
-  bool hasMoreInstructions() const;
-  bool currentInstructionIsType(instructionType type) const;
+  void advanceCommand(bool init = false);
+  bool moreCommands() const;
+  bool commandIsType(commandTypes type) const;
 
  private:
   std::ifstream inputFile;
-  int currentInstructionNumber;
-  std::string currentInstruction;
-  Parser::instructionType currentInstructionType;
-  std::string currentInstructionSymbol;
-  std::string currentInstructionCompField;
-  std::string currentInstructionDestField;
-  std::string currentInstructionJmpField;
+  int instructionNumber;
+  bool _moreCommands;
+  std::string command;
+  std::string commandSymbol;
+  std::string instructionCompField;
+  std::string instructionDestField;
+  std::string instructionJmpField;
+  Parser::commandTypes commandType;
 
-  void parseCurrentInstruction();
+  void parseCommand(const std::string& line);
 };
 
 const std::unordered_map<std::string, std::string> compMap = {

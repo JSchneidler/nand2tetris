@@ -10,10 +10,10 @@ const int STACK_BASE_ADDR = 0x100;
 
 static std::string getOutputFilename(const std::string &string);
 static std::string getFileBasename(const std::string &string);
-static bool isDirectory(const std::string &path);
-static std::vector<std::string> readDirectory(const std::string &inputPath);
-static bool isVmFile(const std::string &fileName);
 static std::string trimDirectoryName(const std::string &directory);
+static bool isDirectory(const std::string &path);
+static bool isVmFile(const std::string &fileName);
+static std::vector<std::string> readDirectory(const std::string &inputPath);
 
 int main(int, const char *argv[]) {
   if (!argv[1]) throw std::invalid_argument("No input file given");
@@ -32,10 +32,9 @@ int main(int, const char *argv[]) {
   }
 
   Translator translator{};
-
   std::ofstream outputFile{outputFileName};
 
-  // Set stack pointer to base address of stack
+  // Initialize stack pointer
   std::string instruction{translator.initializeStackPointer(STACK_BASE_ADDR)};
   std::cout << "INIT: initialize stack pointer\n" << instruction << std::endl;
   outputFile << instruction;
@@ -268,9 +267,19 @@ static std::string getFileBasename(const std::string &fileName) {
   return fileName.substr(0, fileName.find_first_of('.'));
 }
 
+static std::string trimDirectoryName(const std::string &directory) {
+  if (directory.substr(directory.length() - 1) == "/")
+    return directory.substr(0, directory.length() - 1);
+  return directory;
+}
+
 static bool isDirectory(const std::string &path) {
   if (path.substr(path.length() - 3) == ".vm") return false;
   return true;
+}
+
+static bool isVmFile(const std::string &fileName) {
+  return fileName.substr(fileName.length() - 3) == ".vm";
 }
 
 static std::vector<std::string> readDirectory(const std::string &inputPath) {
@@ -291,14 +300,4 @@ static std::vector<std::string> readDirectory(const std::string &inputPath) {
   closedir(dir);
 
   return vmFiles;
-}
-
-static bool isVmFile(const std::string &fileName) {
-  return fileName.substr(fileName.length() - 3) == ".vm";
-}
-
-static std::string trimDirectoryName(const std::string &directory) {
-  if (directory.substr(directory.length() - 1) == "/")
-    return directory.substr(0, directory.length() - 1);
-  return directory;
 }

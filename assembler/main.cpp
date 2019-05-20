@@ -8,10 +8,11 @@
 static std::string generateOutputFilename(const std::string& inputFilename);
 static std::string to15BitBinaryString(const int number);
 
+const int VARIABLE_STACK_BASE_ADDRESS{0x10};
+
 int main(int, const char* argv[]) {
   if (!argv[1]) throw std::invalid_argument("No input file received");
 
-  const int VARIABLE_STACK_BASE_ADDRESS{0x10};
   int nextVariableStackAddress{VARIABLE_STACK_BASE_ADDRESS};
 
   std::string inputFilename{argv[1]};
@@ -23,39 +24,37 @@ int main(int, const char* argv[]) {
   Parser parser{inputFilename};
 
   // First pass
-  while (parser.advanceToNextInstruction()) {
-    if (parser.currentInstructionIsType(Parser::L_INSTRUCTION) &&
-        !symbolTable.contains(parser.getCurrentInstructionSymbol()))
-      symbolTable.addSymbol(parser.getCurrentInstructionSymbol(),
-                            parser.getCurrentInstructionNumber() + 1);
+  for (; parser.moreCommands(); parser.advanceCommand()) {
+    if (parser.commandIsType(Parser::L_COMMAND) &&
+        !symbolTable.contains(parser.getCommandSymbol()))
+      symbolTable.addSymbol(parser.getCommandSymbol(),
+                            parser.getInstructionNumber() + 1);
   }
 
   // Second pass
-  parser.reset();
-
   std::string machineInstruction;
-  while (parser.advanceToNextInstruction()) {
-    if (parser.currentInstructionIsType(Parser::A_INSTRUCTION)) {
-      if (!symbolTable.contains(parser.getCurrentInstructionSymbol())) {
-        symbolTable.addSymbol(parser.getCurrentInstructionSymbol(),
-                              nextVariableStackAddress);
+  for (parser.reset(); parser.moreCommands(); parser.advanceCommand()) {
+    if (parser.commandIsType(Parser::A_INSTRUCTION)) {
+      std::string symbol = parser.getCommandSymbol();
+
+      if (!symbolTable.contains(symbol)) {
+        symbolTable.addSymbol(symbol, nextVariableStackAddress);
         ++nextVariableStackAddress;
       }
 
       int symbolValue;
-      if (!isdigit(parser.getCurrentInstructionSymbol()[0]))
-        symbolValue =
-            symbolTable.getSymbolValue(parser.getCurrentInstructionSymbol());
+      if (!isdigit(symbol[0]))
+        symbolValue = symbolTable.getSymbolValue(symbol);
       else
-        symbolValue = std::stoi(parser.getCurrentInstructionSymbol());
+        symbolValue = std::stoi(symbol);
 
       machineInstruction = "0" + to15BitBinaryString(symbolValue);
 
       outputFile << machineInstruction << std::endl;
-    } else if (parser.currentInstructionIsType(Parser::C_INSTRUCTION)) {
-      machineInstruction = "111" + parser.getCurrentInstructionCompField() +
-                           parser.getCurrentInstructionDestField() +
-                           parser.getCurrentInstructionJmpField();
+    } else if (parser.commandIsType(Parser::C_INSTRUCTION)) {
+      machineInstruction = "111" + parser.getInstructionCompField() +
+                           parser.getInstructionDestField() +
+                           parser.getInstructionJmpField();
 
       outputFile << machineInstruction << std::endl;
     }

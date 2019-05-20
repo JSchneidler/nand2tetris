@@ -15,7 +15,7 @@ Parser::Parser(std::string inputFilename)
       rawInstruction{""} {
   if (!inputFile.good() || inputFile.bad() || inputFile.fail() ||
       !inputFile.is_open())
-    throw std::invalid_argument("Invalid input file");
+    throw std::runtime_error("Invalid input file");
   advanceInstruction();
 }
 
