@@ -23,7 +23,7 @@ The program generates an output file with a `.asm` extension and a basename equa
 
 The program consists of two classes used by main:  
 `Parser` - Reads through each instruction in the input file, parsing it into fields  
-`Translator` -
+`Translator` - Generates sequences of assembly commands for each virtual machine command
 
 The main function starts by iterating through all the `Parser`'s instructions, only looking for label declarations, and adds them to the `SymbolTable` with their corresponding address.
 

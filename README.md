@@ -14,6 +14,7 @@ Below are the topics covered during the course and links to my work on the assoc
 6. [Assembler](#Assembler)
 7. [VM Translator](#VM-Translator)
 8. [Compiler](#Compiler)
+9. [Operating System](#Operating-System)
 
 # Boolean Logic - [My Work](01/)
 
@@ -27,9 +28,15 @@ Below are the topics covered during the course and links to my work on the assoc
 
 # Assembler - [My Work](assembler/)
 
+The assembler project explored the concepts of symbolic and binary machine languages.
+The final goal was to create an assembler that compiles symbolic Hack machine code into
+binary code that can run on the Hack hardware platform built in the previous chapters.
+
 [My Assembler](assembler/)
 
 # VM Translator - [My Work](vm_translator/)
+
+The virtual machine project explored the concepts of virtual machines, stack arithmetic, and the stack machine model. The end goal was to build a virtual machine translator, which adds another layer of abstraction on top of the assembler. The virtual machine translator compiles Hack virtual machine code into Hack assembly language, introducing some simple platform independence while also adding a few new language constructs.
 
 [My VM Translator](vm_translator/)
 

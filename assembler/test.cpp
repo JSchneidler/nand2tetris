@@ -4,8 +4,8 @@
 /*
 These are the unit tests for the symbol table and parser modules.
 
-Each module is a function that performs unit tests and returns 0 if they pass,
-and 1 otherwise.
+Each fuction performs unit tests on a specific module and returns 0 if they
+pass, and 1 otherwise.
 */
 
 int fail(const std::string &reason);
@@ -13,17 +13,17 @@ int fail(const std::string &reason);
 int symbolTableTest() {
   SymbolTable symbolTable{};
 
-  // Test contains()
+  // contains()
   if (symbolTable.contains("test"))
     return fail("symbolTable should not contain 'test' key");
   if (!symbolTable.contains("SP"))
     return fail("symbolTable should contain 'SP' key");
 
-  // Test getSymbolValue()
+  // getSymbolValue()
   if (symbolTable.getSymbolValue("R1") != 0x1)
     return fail("symbolTable key 'R1' should have a value of 0x1");
 
-  // Test addSymbol()
+  // addSymbol()
   symbolTable.addSymbol("test", 0xF);
   if (!symbolTable.contains("test"))
     return fail("symbolTable should contain key 'test'");
@@ -49,17 +49,17 @@ int parserTest() {
   if (parser.getCommand() != "@0")
     return fail("First instruction should be '@0'");
 
-  // Test advanceCommand(), next command should be "D=M"
+  // advanceCommand(), next command should be "D=M"
   parser.advanceCommand();
   if (parser.getCommand() != "D=M")
     return fail("Second instruction should be 'D=M'");
 
-  // Test reset(), should reset parser back to first command
+  // reset(), should reset parser back to first command
   parser.reset();
   if (parser.getCommand() != "@0")
     return fail("After parser.reset(), instruction should be equal to '@0'");
 
-  // Test instructionNumber, iterate to third instruction. instructionNumber
+  // instructionNumber, iterate to third instruction. instructionNumber
   // should be 2
   parser.reset();
   parser.advanceCommand();
@@ -68,7 +68,7 @@ int parserTest() {
     return fail(
         "After iterating to third instruction, instructionNumber should be 2");
 
-  // Test getCommandSymbol()
+  // getCommandSymbol()
   parser.reset();
   parser.advanceCommand();
   parser.advanceCommand();
@@ -77,19 +77,19 @@ int parserTest() {
         "On third instruction, parser.getCommandSymbol() should return "
         "'INFINITE_LOOP'");
 
-  // Test getInstructionCompField()
+  // getInstructionCompField()
   parser.reset();
   parser.advanceCommand();
   if (parser.getInstructionCompField() != "1110000")
     return fail("Instruction comp field should be '1110000'");
 
-  // Test getInstructionDestField()
+  // getInstructionDestField()
   parser.reset();
   parser.advanceCommand();
   if (parser.getInstructionDestField() != "010")
     return fail("Instruction dest field should be '010'");
 
-  // Test getInstructionJmpField()
+  // getInstructionJmpField()
   parser.reset();
   parser.advanceCommand();
   parser.advanceCommand();
@@ -97,23 +97,28 @@ int parserTest() {
   if (parser.getInstructionJmpField() != "110")
     return fail("Instruction jmp field should be '110'");
 
-  // Test moreCommands()
+  // moreCommands()
   parser.reset();
-  if (parser.moreCommands() != true)
-    return fail("Parser should have more commands");
+  if (!parser.moreCommands()) return fail("Parser should have more commands");
 
-  // Test commandIsType()
-  // Test A instruction
+  for (parser.reset(); parser.moreCommands(); parser.advanceCommand()) {
+  }
+  if (parser.moreCommands())
+    return fail(
+        "Parser should not have more commands after being exhausted in a loop");
+
+  // commandIsType()
+  // A instruction
   parser.reset();
   if (!parser.commandIsType(Parser::A_INSTRUCTION))
     return fail("First instruction is an A instruction");
 
-  // Test C instruction
+  // C instruction
   parser.advanceCommand();
   if (!parser.commandIsType(Parser::C_INSTRUCTION))
     return fail("Second instruction is an C instruction");
 
-  // Test L command
+  // L command
   parser.reset();
   for (int i = 0; i < 10; i++) parser.advanceCommand();
   if (!parser.commandIsType(Parser::L_COMMAND))

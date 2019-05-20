@@ -56,4 +56,9 @@ class Parser {
   void parseInstruction(const std::string& line);
 };
 
+bool operator==(const Parser::Instruction& left,
+                const Parser::Instruction& right);
+bool operator!=(const Parser::Instruction& left,
+                const Parser::Instruction& right);
+
 #endif

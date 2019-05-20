@@ -1,5 +1,6 @@
 #include "parser.hpp"
 #include <iostream>
+#include <stdexcept>
 
 static std::string trimWhitespace(const std::string& string);
 static std::string stripComment(const std::string& string);
@@ -126,6 +127,20 @@ void Parser::parseInstruction(const std::string& line) {
 
   // Unknown instruction
   currentInstruction.type = NONE_INSTRUCTION;
+}
+
+bool operator==(const Parser::Instruction& left,
+                const Parser::Instruction& right) {
+  if (left.type != right.type) return false;
+  if (left.segment != right.segment) return false;
+  if (left.indexOrConstant != right.indexOrConstant) return false;
+  if (left.op != right.op) return false;
+  if (left.symbol != right.symbol) return false;
+  return true;
+}
+bool operator!=(const Parser::Instruction& left,
+                const Parser::Instruction& right) {
+  return !(left == right);
 }
 
 static std::string trimWhitespace(const std::string& string) {

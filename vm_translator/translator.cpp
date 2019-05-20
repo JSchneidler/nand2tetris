@@ -161,12 +161,11 @@ std::string Translator::generatePopStaticInstruction(const int index) {
 std::string Translator::generateArithmeticInstruction(const std::string &op) {
   // Start by popping first value (Y) off stack
   std::string instruction{decrementStackPointer()};
+  // Select top of stack
+  instruction += selectStack();
 
   // Unary operations
   if (op == "neg" || op == "not") {
-    // Select top of stack
-    instruction += selectStack();
-
     // Perform operation
     if (op == "neg")
       instruction += makeLine("M=-M");
@@ -176,8 +175,7 @@ std::string Translator::generateArithmeticInstruction(const std::string &op) {
 
   // Binary operations
   else {
-    // Pop first value (Y) off stack into D register
-    instruction += selectStack();
+    // Store first value (Y) off stack into D register
     instruction += makeLine("D=M");
 
     // Pop second value (X) off stack
@@ -250,31 +248,25 @@ std::string Translator::generateCallInstruction(
   ++callSymbolId;
 
   // Push return address
-  std::string instruction{makeLine("\n// Push return address", true)};
-  instruction += selectRegister(returnAddrSymbolName);
+  std::string instruction{selectRegister(returnAddrSymbolName)};
   instruction += makeLine("D=A");
   instruction += selectStack();
   instruction += makeLine("M=D");
   instruction += incrementStackPointer();
 
   // Push LCL
-  instruction += makeLine("\n// Push LCL", true);
   instruction += pushRegisterToStack("LCL");
 
   // Push ARG
-  instruction += makeLine("\n// Push ARG", true);
   instruction += pushRegisterToStack("ARG");
 
   // Push THIS
-  instruction += makeLine("\n// Push THIS", true);
   instruction += pushRegisterToStack("THIS");
 
   // Push THAT
-  instruction += makeLine("\n// Push THAT", true);
   instruction += pushRegisterToStack("THAT");
 
   // Reposition ARG (ARG = SP-n-5)
-  instruction += makeLine("\n// Reposition ARG", true);
   instruction += selectStackPointer();
   instruction += makeLine("D=M");
   if (pushedVars > 0) {
@@ -287,19 +279,16 @@ std::string Translator::generateCallInstruction(
   instruction += makeLine("M=D");
 
   // Reposition LCL (LCL = SP)
-  instruction += makeLine("\n// Reposition LCL", true);
   instruction += selectStackPointer();
   instruction += makeLine("D=M");
   instruction += selectRegister("LCL");
   instruction += makeLine("M=D");
 
   // Goto f
-  instruction += makeLine("\n// Goto f", true);
   instruction += selectRegister(symbol);
   instruction += makeLine("0;JMP");
 
   // Label for return address
-  instruction += makeLine("\n// Label for return address", true);
   instruction += addLabel(returnAddrSymbolName);
 
   return instruction;
@@ -307,14 +296,12 @@ std::string Translator::generateCallInstruction(
 
 std::string Translator::generateReturnInstruction() {
   // Temporarily store top of frame in R13
-  std::string instruction{makeLine("\n// Store top of frame in R13", true)};
-  instruction += selectRegister("LCL");
+  std::string instruction{selectRegister("LCL")};
   instruction += makeLine("D=M");
   instruction += selectRegister("R13");
   instruction += makeLine("M=D");
 
   // Temporarily store return address in R14
-  instruction += makeLine("\n// Store return address in R14", true);
   instruction += selectRegister(5);
   instruction += makeLine("D=D-A");
   instruction += makeLine("A=D");
@@ -323,7 +310,6 @@ std::string Translator::generateReturnInstruction() {
   instruction += makeLine("M=D");
 
   // Swap arg with return value
-  instruction += makeLine("\n// Swap arg with return value", true);
   instruction += decrementStackPointer();
   instruction += selectStack();
   instruction += makeLine("D=M");
@@ -332,14 +318,12 @@ std::string Translator::generateReturnInstruction() {
   instruction += makeLine("M=D");
 
   // Restore SP  = *(ARG + 1)
-  instruction += makeLine("\n// Restore SP", true);
   instruction += selectRegister("ARG");
   instruction += makeLine("D=M+1");
   instruction += selectRegister("SP");
   instruction += makeLine("M=D");
 
   // Restore THAT  = *(FRAME - 1)
-  instruction += makeLine("\n// Restore THAT", true);
   instruction += selectRegister("R13");
   instruction += makeLine("D=M-1");
   instruction += makeLine("A=D");
@@ -348,7 +332,6 @@ std::string Translator::generateReturnInstruction() {
   instruction += makeLine("M=D");
 
   // Restore THIS  = *(FRAME - 2)
-  instruction += makeLine("\n// Restore THIS", true);
   instruction += selectRegister(2);
   instruction += makeLine("D=A");
   instruction += selectRegister("R13");
@@ -359,7 +342,6 @@ std::string Translator::generateReturnInstruction() {
   instruction += makeLine("M=D");
 
   // Restore ARG  = *(FRAME - 3)
-  instruction += makeLine("\n// Restore ARG", true);
   instruction += selectRegister(3);
   instruction += makeLine("D=A");
   instruction += selectRegister("R13");
@@ -370,7 +352,6 @@ std::string Translator::generateReturnInstruction() {
   instruction += makeLine("M=D");
 
   // Restore LCL  = *(FRAME - 4)
-  instruction += makeLine("\n// Restore LCL", true);
   instruction += selectRegister(4);
   instruction += makeLine("D=A");
   instruction += selectRegister("R13");
@@ -381,7 +362,6 @@ std::string Translator::generateReturnInstruction() {
   instruction += makeLine("M=D");
 
   // Goto return address
-  instruction += makeLine("\n// Goto return address", true);
   instruction += selectRegister("R14");
   instruction += makeLine("A=M");
   instruction += makeLine("0;JMP");

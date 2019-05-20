@@ -1,5 +1,6 @@
 #include "parser.hpp"
 #include <iostream>
+#include <stdexcept>
 
 Parser::Parser(const std::string& inputFilename)
     : inputFile(std::ifstream(inputFilename)),
