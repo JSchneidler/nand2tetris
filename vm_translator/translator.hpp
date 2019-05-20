@@ -4,9 +4,15 @@
 #include <string>
 #include "parser.hpp"
 
-class Translator {
- public:
-  enum EQUALITY_CHECK_TYPE { EQ_CHECK, GT_CHECK, LT_CHECK };
+class Translator
+{
+public:
+  enum EQUALITY_CHECK_TYPE
+  {
+    EQ_CHECK,
+    GT_CHECK,
+    LT_CHECK
+  };
 
   Translator();
   void setSymbolPrefix(const std::string &prefix);
@@ -34,7 +40,7 @@ class Translator {
   std::string generateReturnInstruction();
   int getCurrentInstructionNumber();
 
- private:
+private:
   int equalitySymbolId;
   int callSymbolId;
   int instructionCount;

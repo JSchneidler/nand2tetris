@@ -2,7 +2,7 @@
 #include <iostream>
 #include <stdexcept>
 
-Parser::Parser(const std::string& inputFilename)
+Parser::Parser(const std::string &inputFilename)
     : inputFile(std::ifstream(inputFilename)),
       instructionNumber(0),
       _moreCommands{true},
@@ -11,7 +11,8 @@ Parser::Parser(const std::string& inputFilename)
       instructionCompField(""),
       instructionDestField(""),
       instructionJmpField(""),
-      commandType(NONE) {
+      commandType(NONE)
+{
   if (!inputFile.good() || inputFile.bad() || inputFile.fail() ||
       !inputFile.is_open())
     throw std::runtime_error("Invalid input file");
@@ -26,20 +27,24 @@ std::string Parser::getCommand() const { return command; }
 
 std::string Parser::getCommandSymbol() const { return commandSymbol; }
 
-std::string Parser::getInstructionCompField() const {
+std::string Parser::getInstructionCompField() const
+{
   return instructionCompField;
 }
 
-std::string Parser::getInstructionDestField() const {
+std::string Parser::getInstructionDestField() const
+{
   return instructionDestField;
 }
 
-std::string Parser::getInstructionJmpField() const {
+std::string Parser::getInstructionJmpField() const
+{
   return instructionJmpField;
 }
 
 // Sets input file iterator back to beginning
-void Parser::reset() {
+void Parser::reset()
+{
   inputFile.clear();
   inputFile.seekg(0, std::ios::beg);
   instructionNumber = 0;
@@ -49,13 +54,16 @@ void Parser::reset() {
 }
 
 // Advances parser state to the next command in the file.
-void Parser::advanceCommand(bool init /*= false*/) {
+void Parser::advanceCommand(bool init /*= false*/)
+{
   // Read lines until we find a valid command
   std::string line;
-  while (std::getline(inputFile, line)) {
+  while (std::getline(inputFile, line))
+  {
     line = trim(stripComment(line));
 
-    if (line != "") {
+    if (line != "")
+    {
       // Parse out command fields and any symbols
       parseCommand(line);
 
@@ -73,22 +81,29 @@ void Parser::advanceCommand(bool init /*= false*/) {
 
 bool Parser::moreCommands() const { return _moreCommands; }
 
-bool Parser::commandIsType(commandTypes type) const {
+bool Parser::commandIsType(commandTypes type) const
+{
   return commandType == type;
 }
 
 // Parses a command into fields
-void Parser::parseCommand(const std::string& line) {
+void Parser::parseCommand(const std::string &line)
+{
   // Set command to raw command
   command = line;
 
-  if (line[0] == '(') {
+  if (line[0] == '(')
+  {
     commandType = L_COMMAND;
     commandSymbol = line.substr(1, line.size() - 2);
-  } else if (line[0] == '@') {
+  }
+  else if (line[0] == '@')
+  {
     commandType = A_INSTRUCTION;
     commandSymbol = line.substr(1);
-  } else {
+  }
+  else
+  {
     commandType = C_INSTRUCTION;
     commandSymbol = "";
 
@@ -98,17 +113,21 @@ void Parser::parseCommand(const std::string& line) {
     size_t compEnd{line.length()};
 
     // If dest field, parse
-    if (destFieldSplitter != std::string::npos) {
+    if (destFieldSplitter != std::string::npos)
+    {
       instructionDestField = destMap.at(line.substr(0, destFieldSplitter));
-      compStart = destFieldSplitter + 1;  // Set start of comp field
-    } else
+      compStart = destFieldSplitter + 1; // Set start of comp field
+    }
+    else
       instructionDestField = "000";
 
     // If jmp field, parse
-    if (jmpFieldSplitter != std::string::npos) {
+    if (jmpFieldSplitter != std::string::npos)
+    {
       instructionJmpField = jmpMap.at(line.substr(jmpFieldSplitter + 1));
-      compEnd = jmpFieldSplitter;  // Set end of comp field
-    } else
+      compEnd = jmpFieldSplitter; // Set end of comp field
+    }
+    else
       instructionJmpField = "000";
 
     // Parse comp field
@@ -117,8 +136,10 @@ void Parser::parseCommand(const std::string& line) {
 }
 
 // Trims sequences spaces off the beginning and end of a string
-std::string trim(const std::string& string) {
-  if (string == "") return string;
+std::string trim(const std::string &string)
+{
+  if (string == "")
+    return string;
 
   size_t start{string.find_first_not_of(' ')};
   size_t end{string.find_last_not_of(' ')};
@@ -126,11 +147,14 @@ std::string trim(const std::string& string) {
 }
 
 // Strips a comment off the end of a line
-std::string stripComment(const std::string& string) {
-  if (string == "") return string;
+std::string stripComment(const std::string &string)
+{
+  if (string == "")
+    return string;
 
   size_t i{string.find("//")};
-  if (i != std::string::npos) {
+  if (i != std::string::npos)
+  {
     return string.substr(0, i);
   }
 

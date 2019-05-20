@@ -12,7 +12,8 @@ pass, and 1 otherwise.
 
 int fail(const std::string &reason);
 
-int parserTest() {
+int parserTest()
+{
   Parser parser{"test.vm"};
 
   // getRawInstruction()
@@ -31,7 +32,8 @@ int parserTest() {
     return fail("Parser should have more instructions");
 
   // advanceInstruction()
-  for (parser.reset(); parser.moreInstructions(); parser.advanceInstruction()) {
+  for (parser.reset(); parser.moreInstructions(); parser.advanceInstruction())
+  {
   }
   if (parser.getRawInstruction() != "return")
     return fail(
@@ -51,14 +53,17 @@ int parserTest() {
   return 0;
 }
 
-int main() {
-  if (parserTest()) return 1;
+int main()
+{
+  if (parserTest())
+    return 1;
 
   printf("Success");
   return 0;
 }
 
-int fail(const std::string &reason) {
+int fail(const std::string &reason)
+{
   printf("%s\n", reason.c_str());
   return 1;
 }
