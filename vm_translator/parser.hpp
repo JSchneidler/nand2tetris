@@ -4,9 +4,11 @@
 #include <fstream>
 #include <string>
 
-class Parser {
- public:
-  enum INSTRUCTION_TYPES {
+class Parser
+{
+public:
+  enum INSTRUCTION_TYPES
+  {
     LABEL_INSTRUCTION,
     PUSH_INSTRUCTION,
     POP_INSTRUCTION,
@@ -19,7 +21,8 @@ class Parser {
     NONE_INSTRUCTION
   };
 
-  enum SEGMENTS {
+  enum SEGMENTS
+  {
     CONSTANT_SEGMENT,
     LOCAL_SEGMENT,
     ARGUMENT_SEGMENT,
@@ -31,7 +34,8 @@ class Parser {
     NONE_SEGMENT
   };
 
-  struct Instruction {
+  struct Instruction
+  {
     INSTRUCTION_TYPES type;
     SEGMENTS segment;
     int indexOrConstant;
@@ -42,23 +46,23 @@ class Parser {
   Parser(std::string inputFilename);
   ~Parser();
   bool moreInstructions() const;
-  const Instruction& getCurrentInstruction() const;
+  const Instruction &getCurrentInstruction() const;
   void reset();
   void advanceInstruction();
   std::string getRawInstruction();
 
- private:
+private:
   std::ifstream inputFile;
   std::string inputFileBasename;
   bool _moreInstructions;
   Instruction currentInstruction;
   std::string rawInstruction;
-  void parseInstruction(const std::string& line);
+  void parseInstruction(const std::string &line);
 };
 
-bool operator==(const Parser::Instruction& left,
-                const Parser::Instruction& right);
-bool operator!=(const Parser::Instruction& left,
-                const Parser::Instruction& right);
+bool operator==(const Parser::Instruction &left,
+                const Parser::Instruction &right);
+bool operator!=(const Parser::Instruction &left,
+                const Parser::Instruction &right);
 
 #endif

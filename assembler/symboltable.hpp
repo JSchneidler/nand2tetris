@@ -4,17 +4,18 @@
 #include <string>
 #include <unordered_map>
 
-class SymbolTable {
- public:
+class SymbolTable
+{
+public:
   SymbolTable();
-  bool contains(const std::string& symbol) const;
-  void addSymbol(const std::string& symbol, int value);
-  int getSymbolValue(const std::string& symbol) const;
+  bool contains(const std::string &symbol) const;
+  void addSymbol(const std::string &symbol, int value);
+  int getSymbolValue(const std::string &symbol) const;
 
-  friend std::ostream& operator<<(std::ostream& os,
-                                  const SymbolTable& symbolTable);
+  friend std::ostream &operator<<(std::ostream &os,
+                                  const SymbolTable &symbolTable);
 
- private:
+private:
   std::unordered_map<std::string, int> map;
 };
 

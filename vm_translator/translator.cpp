@@ -8,12 +8,14 @@ Translator::Translator()
       symbolPrefix{""},
       currentFunctionName{""} {}
 
-void Translator::setSymbolPrefix(const std::string &prefix) {
+void Translator::setSymbolPrefix(const std::string &prefix)
+{
   symbolPrefix = prefix;
 }
 
 // Initializes stack pointer to a passed address
-std::string Translator::initializeStackPointer(const int stackAddress) {
+std::string Translator::initializeStackPointer(const int stackAddress)
+{
   // Set stack pointer register to the stack's base address
   std::string instruction{selectRegister(stackAddress)};
   instruction += makeLine("D=A");
@@ -24,7 +26,8 @@ std::string Translator::initializeStackPointer(const int stackAddress) {
 }
 
 std::string Translator::generatePushInstruction(
-    const std::string &segmentStackPointer, const int index) {
+    const std::string &segmentStackPointer, const int index)
+{
   // Store segment index in D register
   std::string instruction{selectRegister(index)};
   instruction += makeLine("D=A");
@@ -40,7 +43,8 @@ std::string Translator::generatePushInstruction(
   return instruction;
 }
 
-std::string Translator::generatePushConstantInstruction(const int value) {
+std::string Translator::generatePushConstantInstruction(const int value)
+{
   // Store value in D register
   std::string instruction{selectRegister(value)};
   instruction += makeLine("D=A");
@@ -53,7 +57,8 @@ std::string Translator::generatePushConstantInstruction(const int value) {
   return instruction;
 }
 
-std::string Translator::generatePushZeroToStackInstruction() {
+std::string Translator::generatePushZeroToStackInstruction()
+{
   std::string instruction{selectStack()};
   instruction += makeLine("M=0");
   instruction += incrementStackPointer();
@@ -61,7 +66,8 @@ std::string Translator::generatePushZeroToStackInstruction() {
   return instruction;
 }
 
-std::string Translator::generatePushTempInstruction(const int index) {
+std::string Translator::generatePushTempInstruction(const int index)
+{
   std::string instruction{selectRegister(5 + index)};
   instruction += makeLine("D=M");
   // Push D reg on stack
@@ -72,7 +78,8 @@ std::string Translator::generatePushTempInstruction(const int index) {
   return instruction;
 }
 
-std::string Translator::generatePushPointerInstruction(const int index) {
+std::string Translator::generatePushPointerInstruction(const int index)
+{
   std::string instruction{selectRegister(3 + index)};
   instruction += makeLine("D=M");
   // Push D reg on stack
@@ -83,7 +90,8 @@ std::string Translator::generatePushPointerInstruction(const int index) {
   return instruction;
 }
 
-std::string Translator::generatePushStaticInstruction(const int index) {
+std::string Translator::generatePushStaticInstruction(const int index)
+{
   std::string instruction{selectRegister(generateStaticSymbol(index))};
   instruction += makeLine("D=M");
   // Push D reg on stack
@@ -95,7 +103,8 @@ std::string Translator::generatePushStaticInstruction(const int index) {
 }
 
 std::string Translator::generatePopInstruction(
-    const std::string &segmentStackPointer, const int index) {
+    const std::string &segmentStackPointer, const int index)
+{
   // Store segment address + index in R13
   std::string instruction{selectRegister(index)};
   instruction += makeLine("D=A");
@@ -114,7 +123,8 @@ std::string Translator::generatePopInstruction(
   return instruction;
 }
 
-std::string Translator::generatePopTempInstruction(const int index) {
+std::string Translator::generatePopTempInstruction(const int index)
+{
   std::string instruction{decrementStackPointer()};
   instruction += selectStack();
   instruction += makeLine("D=M");
@@ -124,7 +134,8 @@ std::string Translator::generatePopTempInstruction(const int index) {
   return instruction;
 }
 
-std::string Translator::generatePopPointerInstruction(const int index) {
+std::string Translator::generatePopPointerInstruction(const int index)
+{
   // Store pointer address in R13
   std::string instruction{selectRegister(3 + index)};
   instruction += makeLine("D=A");
@@ -141,7 +152,8 @@ std::string Translator::generatePopPointerInstruction(const int index) {
   return instruction;
 }
 
-std::string Translator::generatePopStaticInstruction(const int index) {
+std::string Translator::generatePopStaticInstruction(const int index)
+{
   // Store pointer address in R13
   std::string instruction{selectRegister(generateStaticSymbol(index))};
   instruction += makeLine("D=A");
@@ -158,14 +170,16 @@ std::string Translator::generatePopStaticInstruction(const int index) {
   return instruction;
 }
 
-std::string Translator::generateArithmeticInstruction(const std::string &op) {
+std::string Translator::generateArithmeticInstruction(const std::string &op)
+{
   // Start by popping first value (Y) off stack
   std::string instruction{decrementStackPointer()};
   // Select top of stack
   instruction += selectStack();
 
   // Unary operations
-  if (op == "neg" || op == "not") {
+  if (op == "neg" || op == "not")
+  {
     // Perform operation
     if (op == "neg")
       instruction += makeLine("M=-M");
@@ -174,7 +188,8 @@ std::string Translator::generateArithmeticInstruction(const std::string &op) {
   }
 
   // Binary operations
-  else {
+  else
+  {
     // Store first value (Y) off stack into D register
     instruction += makeLine("D=M");
 
@@ -207,12 +222,14 @@ std::string Translator::generateArithmeticInstruction(const std::string &op) {
   return instruction;
 }
 
-std::string Translator::generateLabelInstruction(const std::string &symbol) {
+std::string Translator::generateLabelInstruction(const std::string &symbol)
+{
   return addLabel(currentFunctionName + "." + symbol);
 }
 
 std::string Translator::generateConditionalGotoInstruction(
-    const std::string &symbol) {
+    const std::string &symbol)
+{
   // Pop value off stack into D register
   std::string instruction{decrementStackPointer()};
   instruction += selectStack();
@@ -225,16 +242,19 @@ std::string Translator::generateConditionalGotoInstruction(
   return instruction;
 }
 
-std::string Translator::generateGotoInstruction(const std::string &symbol) {
+std::string Translator::generateGotoInstruction(const std::string &symbol)
+{
   return selectRegister(currentFunctionName + "." + symbol) + makeLine("0;JMP");
 }
 
 std::string Translator::generateFnDeclInstruction(const std::string &symbol,
-                                                  const int localVars) {
+                                                  const int localVars)
+{
   setCurrentFunctionName(symbol);
 
   std::string instruction{addLabel(/*symbolPrefix + "." + */ symbol)};
-  for (int i = 0; i < localVars; i++) {
+  for (int i = 0; i < localVars; i++)
+  {
     instruction += generatePushZeroToStackInstruction();
   }
 
@@ -242,7 +262,8 @@ std::string Translator::generateFnDeclInstruction(const std::string &symbol,
 }
 
 std::string Translator::generateCallInstruction(
-    const std::string &symbol, const int pushedVars /* = 0 */) {
+    const std::string &symbol, const int pushedVars /* = 0 */)
+{
   std::string returnAddrSymbolName{symbol + ".return." +
                                    std::to_string(callSymbolId)};
   ++callSymbolId;
@@ -269,7 +290,8 @@ std::string Translator::generateCallInstruction(
   // Reposition ARG (ARG = SP-n-5)
   instruction += selectStackPointer();
   instruction += makeLine("D=M");
-  if (pushedVars > 0) {
+  if (pushedVars > 0)
+  {
     instruction += selectRegister(pushedVars);
     instruction += makeLine("D=D-A");
   }
@@ -294,7 +316,8 @@ std::string Translator::generateCallInstruction(
   return instruction;
 }
 
-std::string Translator::generateReturnInstruction() {
+std::string Translator::generateReturnInstruction()
+{
   // Temporarily store top of frame in R13
   std::string instruction{selectRegister("LCL")};
   instruction += makeLine("D=M");
@@ -374,13 +397,16 @@ int Translator::getCurrentInstructionNumber() { return instructionCount; }
 // Appends a newline to the end of string. That's it.
 std::string Translator::makeLine(
     const std::string &string,
-    bool dontIncreaseInstructionNumber /* = false */) {
-  if (!dontIncreaseInstructionNumber) ++instructionCount;
+    bool dontIncreaseInstructionNumber /* = false */)
+{
+  if (!dontIncreaseInstructionNumber)
+    ++instructionCount;
   return string + "\n";
 }
 
 // Generates a unique symbol name
-std::string Translator::getNextEqualitySymbolId() {
+std::string Translator::getNextEqualitySymbolId()
+{
   std::string symbolName{/*symbolPrefix + "." + */ currentFunctionName +
                          ".EQ." + std::to_string(equalitySymbolId)};
   ++equalitySymbolId;
@@ -389,7 +415,8 @@ std::string Translator::getNextEqualitySymbolId() {
 }
 
 // Generates a symbol based on set prefix and passed index
-std::string Translator::generateStaticSymbol(const int index) {
+std::string Translator::generateStaticSymbol(const int index)
+{
   return symbolPrefix + "." + std::to_string(index);
 }
 
@@ -397,22 +424,26 @@ std::string Translator::generateStaticSymbol(const int index) {
 std::string Translator::selectStackPointer() { return selectRegister("SP"); }
 
 // Selects the SP register and increases it by 1
-std::string Translator::incrementStackPointer() {
+std::string Translator::incrementStackPointer()
+{
   return selectStackPointer() + makeLine("M=M+1");
 }
 
 // Selects the SP register and decreases it by 1
-std::string Translator::decrementStackPointer() {
+std::string Translator::decrementStackPointer()
+{
   return selectStackPointer() + makeLine("M=M-1");
 }
 
 // Selects the register at the top of the stack
-std::string Translator::selectStack() {
+std::string Translator::selectStack()
+{
   return selectStackPointer() + makeLine("A=M");
 }
 
 // Generates a label
-std::string Translator::addLabel(const std::string &string) {
+std::string Translator::addLabel(const std::string &string)
+{
   return makeLine("(" + string + ")", true);
 }
 
@@ -420,35 +451,42 @@ std::string Translator::addLabel(const std::string &string) {
 // new top of the stack (second value).
 std::string Translator::equalityCheck(
     const Translator::EQUALITY_CHECK_TYPE checkType,
-    const std::string &symbolName) {
+    const std::string &symbolName)
+{
   std::string jumpType;
-  if (checkType == Translator::EQ_CHECK) jumpType = "JNE";
-  if (checkType == Translator::GT_CHECK) jumpType = "JGE";
-  if (checkType == Translator::LT_CHECK) jumpType = "JLE";
+  if (checkType == Translator::EQ_CHECK)
+    jumpType = "JNE";
+  if (checkType == Translator::GT_CHECK)
+    jumpType = "JGE";
+  if (checkType == Translator::LT_CHECK)
+    jumpType = "JLE";
 
   std::string instruction;
   instruction += makeLine("D=D-M");
-  instruction += makeLine("M=0");  // Assume false
+  instruction += makeLine("M=0"); // Assume false
   instruction += selectRegister(symbolName);
-  instruction += makeLine("D;" + jumpType);  // Compare, Goto continue if passes
+  instruction += makeLine("D;" + jumpType); // Compare, Goto continue if passes
   instruction += selectStack();
-  instruction += makeLine("M=-1");      // Set true
-  instruction += addLabel(symbolName);  // Continue
+  instruction += makeLine("M=-1");     // Set true
+  instruction += addLabel(symbolName); // Continue
 
   return instruction;
 }
 
 // Selects a register denoted by the string
-std::string Translator::selectRegister(const std::string &string) {
+std::string Translator::selectRegister(const std::string &string)
+{
   return makeLine("@" + string);
 }
 
 // Selects a register number
-std::string Translator::selectRegister(const int r) {
+std::string Translator::selectRegister(const int r)
+{
   return selectRegister(std::to_string(r));
 }
 
-std::string Translator::pushRegisterToStack(const std::string &string) {
+std::string Translator::pushRegisterToStack(const std::string &string)
+{
   std::string instruction{selectRegister(string)};
   instruction += makeLine("D=M");
   instruction += selectStack();
@@ -458,7 +496,8 @@ std::string Translator::pushRegisterToStack(const std::string &string) {
   return instruction;
 }
 
-void Translator::setCurrentFunctionName(const std::string &string) {
+void Translator::setCurrentFunctionName(const std::string &string)
+{
   currentFunctionName = string;
   equalitySymbolId = 0;
 }

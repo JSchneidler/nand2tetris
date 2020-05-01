@@ -2,10 +2,12 @@
 
 int fail(const std::string &reason);
 
-int fsUtilsTest() {
+int fsUtilsTest()
+{
   // isDirectory(path)
   const std::string paths[] = {"test", "test/", "./test", "./test/"};
-  for (std::string path : paths) {
+  for (std::string path : paths)
+  {
     if (!isDirectory(path))
       return fail("isDirectory should return true for path: " + path);
   }
@@ -19,14 +21,17 @@ int fsUtilsTest() {
   return 0;
 }
 
-int main() {
-  if (fsUtilsTest()) return 1;
+int main()
+{
+  if (fsUtilsTest())
+    return 1;
 
   printf("Success");
   return 0;
 }
 
-int fail(const std::string &reason) {
+int fail(const std::string &reason)
+{
   printf("%s\n", reason.c_str());
   return 1;
 }
