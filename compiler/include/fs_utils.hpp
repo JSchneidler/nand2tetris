@@ -2,10 +2,10 @@
 #define FS_UTILS_HPP
 
 #include <filesystem>
-#include <string>
 #include <vector>
 
-std::vector<std::filesystem::path> getJackFilesInDirectory(
-    const std::filesystem::path &directoryPath);
+namespace fs = std::filesystem;
+
+std::vector<fs::path> getJackFilesInDirectory(const fs::path &directoryPath);
 
 #endif

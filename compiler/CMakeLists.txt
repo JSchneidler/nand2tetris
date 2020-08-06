@@ -6,6 +6,8 @@ project("Jack Compiler"
   LANGUAGES CXX
 )
 
+find_package(Boost 1.73 REQUIRED)
+
 add_subdirectory(src)
 
 if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)

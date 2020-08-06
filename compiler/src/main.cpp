@@ -6,58 +6,62 @@
 #include <vector>
 
 #include "fs_utils.hpp"
+#include "tokenizer.hpp"
+
+namespace fs = std::filesystem;
 
 int main(int, const char *argv[]) {
   if (!argv[1]) {
     std::cout << "No input file given. Terminating." << std::endl;
-    return 1;
+    exit(1);
   }
 
-  const std::filesystem::path inputPath{argv[1]};
-  std::string outputFileName;
+  const fs::path inputPath{argv[1]};
+  fs::path outputPath;
 
-  if (!std::filesystem::exists(inputPath)) {
+  if (!fs::exists(inputPath)) {
     std::cout << "Input path does not exist. Terminating." << std::endl;
-    return 1;
+    exit(1);
   }
 
   // Create list of files to read
-  std::vector<std::filesystem::path> inputFiles;
+  std::vector<fs::path> inputPaths;
 
   // Single file compilation
   if (inputPath.extension() == ".jack") {
-    outputFileName = std::filesystem::path(inputPath).stem().string() + ".vm";
-    inputFiles = {inputPath};
+    outputPath = fs::path(inputPath).stem();
+    inputPaths = {inputPath};
   }
 
   // Directory compilation
-  else if (std::filesystem::is_directory(inputPath)) {
-    outputFileName = inputPath.filename().string() + ".vm";
-    if (outputFileName == ".vm")
-      outputFileName =
-          std::filesystem::path(inputPath).parent_path().filename().string() +
-          ".vm";
+  else if (fs::is_directory(inputPath)) {
+    outputPath = inputPath.filename();
+    if (outputPath == "")
+      outputPath = fs::path(inputPath).parent_path().filename();
 
-    inputFiles = getJackFilesInDirectory(inputPath);
+    inputPaths = getJackFilesInDirectory(inputPath);
+
+    if (inputPaths.size() == 0) {
+      std::cout << "Path contains no .jack files. Path must be a .jack file or "
+                   "a directory containing at least one .jack file."
+                << std::endl;
+      exit(1);
+    }
   }
-
-  // TODO: Multiple file compilation
 
   else {
     std::cout
         << "Invalid path passed to compiler. Path must be a .jack file or "
            "a directory containing at least one .jack file."
         << std::endl;
-    return 1;
+    exit(1);
   }
 
-  std::cout << outputFileName << std::endl;
+  outputPath += ".xml";
 
-  /*
-  std::ofstream outputFile{outputFileName};
-
-  outputFile.close();
-  */
+  for (fs::path inputPath : inputPaths) {
+    const std::vector<Token> tokens = tokenizeJackFile(inputPath);
+  }
 
   return 0;
 }

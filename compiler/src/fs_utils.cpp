@@ -1,26 +1,13 @@
 #include "fs_utils.hpp"
 
 #include <filesystem>
+#include <iostream>
 
-std::vector<std::filesystem::path> getJackFilesInDirectory(
-    const std::filesystem::path &directoryPath) {
-  std::vector<std::filesystem::path> jackFiles;
-  /*
-  DIR *dir;
-  struct dirent *ent;
+std::vector<fs::path> getJackFilesInDirectory(const fs::path &directoryPath) {
+  std::vector<fs::path> jackFiles;
 
-  dir = opendir(inputPath.c_str());
-  if (dir != NULL) {
-    while ((ent = readdir(dir)) != NULL)
-      if (ent->d_type == DT_REG && isJackFile(ent->d_name))
-        jackFiles.push_back(ent->d_name);
-  } else {
-    fprintf(stderr, "Cannot open %s\n", inputPath.c_str());
-    exit(EXIT_FAILURE);
-  }
+  for (const fs::directory_entry &path : fs::directory_iterator(directoryPath))
+    if (path.path().extension() == ".jack") jackFiles.push_back(path.path());
 
-  closedir(dir);
-
-  */
   return jackFiles;
 }
