@@ -9,3 +9,4 @@
 *.asm
 demo/
 00/
+.DS_Store

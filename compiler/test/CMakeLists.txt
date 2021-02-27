@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 3.11...3.20)
 configure_file(Main.jack test/Main.jack COPYONLY)
 configure_file(Main.xml test/Main.xml COPYONLY)
 configure_file(MainT.xml test/MainT.xml COPYONLY)
+configure_file(TokenizerTest.jack test/TokenizerTest.jack COPYONLY)
 
 add_executable(fsUtilsTests fs_utils.test.cpp ../src/fs_utils.cpp)
 target_compile_features(fsUtilsTests PRIVATE cxx_std_20)

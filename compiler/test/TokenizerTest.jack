@@ -1,0 +1,24 @@
+// File name: compiler/test/TokenizerTest.jack
+
+/** API comment test */
+/** API comment test
+    Test
+*   Test
+
+*
+*/
+	
+/* Block comment test */
+/* Block comment test
+    Test
+*   Test
+
+*
+*/
+
+class Main {
+    function void main() {
+        var String s = "Hello, world!";
+        var int i = 1000;
+    }
+}

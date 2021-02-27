@@ -7,10 +7,11 @@
 
 BOOST_AUTO_TEST_SUITE(FSUtilsTestSuite)
 
-BOOST_AUTO_TEST_CASE(getJackFilesInDirectory_tests) {
-  std::vector<fs::path> jackFiles{"test/Main.jack"};
+BOOST_AUTO_TEST_CASE(getJackFilesInDirectory_tests)
+{
+  FSUtils::JackFiles expectedJackFiles{"test/Main.jack", "test/TokenizerTest.jack"};
 
-  BOOST_TEST(getJackFilesInDirectory("test/") == jackFiles);
+  BOOST_TEST(FSUtils::getJackFilesInDirectory("test/") == expectedJackFiles);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
