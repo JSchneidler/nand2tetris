@@ -6,66 +6,65 @@
 #include <vector>
 
 #include "fs_utils.hpp"
-#include "tokenizer.hpp"
+#include "lexer.hpp"
+#include "parser.hpp"
 
 namespace fs = std::filesystem;
+
+static constexpr char USAGE[] =
+R"(Jack Compiler
+
+Usage:
+  JackC input_path [options]
+
+input_path: A path to a .jack file or directory containing one or more .jack files
+
+Options:
+  No supported options at the moment.
+)";
+
+void fatalError(std::string err)
+{
+  std::cout << USAGE << std::endl;
+  std::cout << "PROGRAM ERROR: " << err << std::endl;
+  exit(1);
+}
 
 int main(int, const char *argv[])
 {
   if (!argv[1])
-  {
-    std::cout << "No input file given. Terminating." << std::endl;
-    exit(1);
-  }
+    fatalError("No input file given.");
 
   const fs::path inputPath{argv[1]};
   if (!fs::exists(inputPath))
-  {
-    std::cout << "Input path does not exist. Terminating." << std::endl;
-    exit(1);
-  }
+    fatalError("Input path does not exist.");
 
   FSUtils::JackFiles inputPaths;
-  fs::path outputPath;
 
+  // Single file compilation
   if (inputPath.extension() == ".jack")
-  {
-    // Single file compilation
     inputPaths = {inputPath};
-    outputPath = fs::path(inputPath).stem();
-    outputPath += ".xml";
-  }
   else if (fs::is_directory(inputPath))
   {
     // Directory compilation
     inputPaths = FSUtils::getJackFilesInDirectory(inputPath);
 
-    outputPath = inputPath.filename();
-    if (outputPath == "")
-      outputPath = fs::path(inputPath).parent_path().filename();
-    outputPath += ".xml";
-
     if (inputPaths.size() == 0)
-    {
-      std::cout << "Path contains no .jack files. Path must be a .jack file or "
-                   "a directory containing at least one .jack file."
-                << std::endl;
-      exit(1);
-    }
+      fatalError("Path contains no .jack files. Path must be a .jack file or "
+                   "a directory containing at least one .jack file.");
   }
   else
-  {
-    std::cout
-        << "Invalid path passed to compiler. Path must be a .jack file or "
-           "a directory containing at least one .jack file."
-        << std::endl;
-    exit(1);
-  }
+    fatalError("Invalid path passed to compiler. Path must be a .jack file or "
+           "a directory containing at least one .jack file.");
 
   for (fs::path path : inputPaths)
   {
-    std::cout << "Tokenizing " << path << std::endl;
-    Tokenizer::tokenizeJackFile(path);
+    std::cout << "Compiling " << path << std::endl;
+    Lexer::Tokens tokens = Lexer::tokenizeJackFile(path);
+    fs::path outputPath (path.replace_filename(path.stem().string() + ".xml"));
+    std::ofstream outputFile(outputPath);
+    outputFile << Lexer::getXML(tokens);
+    outputFile.close();
   }
 
   return 0;

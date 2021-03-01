@@ -9,7 +9,7 @@ BOOST_AUTO_TEST_SUITE(FSUtilsTestSuite)
 
 BOOST_AUTO_TEST_CASE(getJackFilesInDirectory_tests)
 {
-  FSUtils::JackFiles expectedJackFiles{"test/Main.jack", "test/TokenizerTest.jack"};
+  FSUtils::JackFiles expectedJackFiles{"test/Main.jack", "test/LexerTest.jack"};
 
   BOOST_TEST(FSUtils::getJackFilesInDirectory("test/") == expectedJackFiles);
 }
