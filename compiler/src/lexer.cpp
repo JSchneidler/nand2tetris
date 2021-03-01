@@ -60,12 +60,6 @@ namespace Lexer
     return xml;
   }
 
-  bool Token::isKeyword() const { return getTokenType() == TokenType::KEYWORD; }
-  bool Token::isSymbol() const { return getTokenType() == TokenType::SYMBOL; }
-  bool Token::isIdentifier() const { return getTokenType() == TokenType::IDENTIFIER; }
-  bool Token::isIntegerConst() const { return getTokenType() == TokenType::INTEGER_CONST; }
-  bool Token::isStringConst() const { return getTokenType() == TokenType::STRING_CONST; }
-
   std::ostream &operator<<(std::ostream &os, const Token &token)
   {
     os << token.getTokenTypeString() << " " << token.getTokenValue() << std::endl;
@@ -80,9 +74,14 @@ namespace Lexer
     return true;
   }
 
+  bool operator==(const TokenType &tokenType, const Token &token) { return token == tokenType; }
+  bool operator==(const Token &token, const TokenType &tokenType) { return token.getTokenType() == tokenType; }
+
   bool operator==(const Keyword &keyword, const Token &token) { return token == keyword; }
   bool operator==(const Token &token, const Keyword &keyword)
   {
+    if (token.getTokenType() != TokenType::KEYWORD) return false;
+
     switch (keyword)
     {
     case Keyword::BOOLEAN:
@@ -127,12 +126,16 @@ namespace Lexer
       return token.getTokenValue() == "void";
     case Keyword::WHILE:
       return token.getTokenValue() == "while";
+    default:
+      return false;
     }
   }
 
   bool operator==(const Symbol &symbol, const Token &token) { return token == symbol; }
   bool operator==(const Token &token, const Symbol &symbol)
   {
+    if (token.getTokenType() != TokenType::SYMBOL) return false;
+
     switch (symbol)
     {
     case Symbol::AND:
@@ -169,6 +172,8 @@ namespace Lexer
       return token.getTokenValue() == "(";
     case Symbol::CLOSE_PARENTHESIS:
       return token.getTokenValue() == ")";
+    default:
+      return false;
     }
   }
 

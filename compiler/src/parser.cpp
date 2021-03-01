@@ -29,11 +29,11 @@ namespace Parser
 
   NonTerminalNode parseClass(Lexer::Tokens tokens)
   {
-    if (!(tokens.front() == Lexer::Keyword::CLASS))
+    if (tokens.front() != Lexer::Keyword::CLASS)
       parsingError("A class must be the first declaration in a Jack file.");
     tokens.erase(tokens.begin());
 
-    if (!tokens.front().isIdentifier())
+    if (tokens.front() != Lexer::TokenType::IDENTIFIER)
       parsingError("An identifier must come immediately after a class declaration.");
     tokens.erase(tokens.begin());
     NonTerminalNode rootNode (NonTerminalNodeType::CLASS);

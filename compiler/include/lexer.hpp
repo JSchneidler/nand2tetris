@@ -79,16 +79,11 @@ namespace Lexer
     int getTokenValueAsInt() const;
     std::string getTokenXML() const;
 
-    bool isKeyword() const;
-    bool isKeyword(const Keyword keyword) const;
-    bool isSymbol() const;
-    bool isSymbol(const Symbol tokenValue) const;
-    bool isIdentifier() const;
-    bool isIntegerConst() const;
-    bool isStringConst() const;
-
     friend std::ostream &operator<<(std::ostream &os, const Token &token);
     friend bool operator==(const Token &token1, const Token &token2);
+
+    friend bool operator==(const TokenType &tokenType, const Token &token);
+    friend bool operator==(const Token &token, const TokenType &tokenType);
 
     friend bool operator==(const Keyword &keyword, const Token &token);
     friend bool operator==(const Token &token, const Keyword &keyword);
