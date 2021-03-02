@@ -12,36 +12,135 @@ void parsingError(std::string error)
 
 namespace Parser
 {
-  NonTerminalNode::NonTerminalNode(NonTerminalNodeType nodeType)
+  Parser::Parser(Node::TerminalNodes nodes)
   {
-    this->nodeType = nodeType;
+    this->nodes = nodes;
   }
 
-  Nodes NonTerminalNode::getNodes() const
+  template <typename T>
+  void Parser::consumeNode(Node::NonTerminalNode node, const T nodeType, const std::string error)
   {
-    return nodes;
+    if (nodes.front() != nodeType)
+      parsingError(error);
+    node.addNode(nodes.front());
+    nodes.erase(nodes.begin());
   }
 
-  NonTerminalNodeType NonTerminalNode::getNodeType() const
+  void Parser::consumeNode(Node::NonTerminalNode node, const std::vector<std::variant<Node::Keyword, Node::Symbol, Node::TerminalNode>> allowedTypes, const std::string error)
   {
-    return nodeType;
+    for (std::variant<Node::Keyword, Node::Symbol, Node::TerminalNode> type: allowedTypes)
+      //if (nodes.front() != type)
+        parsingError(error);
+    node.addNode(nodes.front());
+    nodes.erase(nodes.begin());
   }
 
-  NonTerminalNode parseClass(Lexer::Tokens tokens)
+  Node::NonTerminalNode parseExpressionList()
   {
-    if (tokens.front() != Lexer::Keyword::CLASS)
-      parsingError("A class must be the first declaration in a Jack file.");
-    tokens.erase(tokens.begin());
-
-    if (tokens.front() != Lexer::TokenType::IDENTIFIER)
-      parsingError("An identifier must come immediately after a class declaration.");
-    tokens.erase(tokens.begin());
-    NonTerminalNode rootNode (NonTerminalNodeType::CLASS);
-    return rootNode;
+    Node::NonTerminalNode node(Node::NonTerminalNodeType::EXPRESSION_LIST);
+    return node;
   }
 
-  NonTerminalNode parseTokens(Lexer::Tokens tokens)
+  Node::NonTerminalNode parseTerm()
   {
-    return parseClass(tokens);
+    Node::NonTerminalNode node(Node::NonTerminalNodeType::TERM);
+    return node;
+  }
+
+  Node::NonTerminalNode parseExpression()
+  {
+    Node::NonTerminalNode node(Node::NonTerminalNodeType::EXPRESSION);
+    return node;
+  }
+
+  Node::NonTerminalNode parseIf()
+  {
+    Node::NonTerminalNode node(Node::NonTerminalNodeType::IF_STATEMENT);
+    return node;
+  }
+
+  Node::NonTerminalNode parseReturn()
+  {
+    Node::NonTerminalNode node(Node::NonTerminalNodeType::RETURN_STATEMENT);
+    return node;
+  }
+
+  Node::NonTerminalNode parseWhile()
+  {
+    Node::NonTerminalNode node(Node::NonTerminalNodeType::WHILE_STATEMENT);
+    return node;
+  }
+
+  Node::NonTerminalNode parseLet()
+  {
+    Node::NonTerminalNode node(Node::NonTerminalNodeType::LET_STATEMENT);
+    return node;
+  }
+
+  Node::NonTerminalNode parseDo()
+  {
+    Node::NonTerminalNode node(Node::NonTerminalNodeType::DO_STATEMENT);
+    return node;
+  }
+
+  Node::NonTerminalNode parseStatements()
+  {
+    Node::NonTerminalNode node(Node::NonTerminalNodeType::STATEMENTS);
+    return node;
+  }
+
+  Node::NonTerminalNode parseVarDec()
+  {
+    Node::NonTerminalNode node(Node::NonTerminalNodeType::VAR_DEC);
+    return node;
+  }
+
+  Node::NonTerminalNode parseParameterList()
+  {
+    Node::NonTerminalNode node(Node::NonTerminalNodeType::PARAMETER_LIST);
+    return node;
+  }
+
+  Node::NonTerminalNode Parser::parseSubroutine()
+  {
+    Node::NonTerminalNode node(Node::NonTerminalNodeType::SUBROUTINE_DEC);
+    return node;
+  }
+
+  Node::NonTerminalNode Parser::parseClassVarDec()
+  {
+    Node::NonTerminalNode node(Node::NonTerminalNodeType::CLASS_VAR_DEC);
+
+    // Consume static|field
+    // consumeNode(nodes, std::vector, "A valid type must follow static|field in a class var dec.");
+    // Consume type
+    consumeNode(node, Node::Keyword::CLASS, "A valid type must follow static|field in a class var dec.");
+    // Consume var name
+    consumeNode(node, Node::TerminalNodeType::IDENTIFIER, "An identifier must follow a class var dec type.");
+
+    return node;
+  }
+
+  void Parser::parseClass()
+  {
+    // Class keyword
+    consumeNode(rootNode, Node::Keyword::CLASS, "A class must be the first declaration in a Jack file.");
+    // Identifier
+    consumeNode(rootNode, Node::TerminalNodeType::IDENTIFIER, "An identifier must follow a class declaration.");
+    // Open curly brace
+    consumeNode(rootNode, Node::Symbol::OPEN_CURLY_BRACE, "An open curly brace must follow a class identifier dec.");
+
+    while (nodes.front() != Node::Symbol::CLOSE_CURLY_BRACE)
+    {
+      if (nodes.front() == Node::Keyword::STATIC || nodes.front() == Node::Keyword::FIELD)
+        rootNode.addNode(parseClassVarDec());
+      else if (nodes.front() == Node::Keyword::CONSTRUCTOR || nodes.front() == Node::Keyword::FUNCTION || nodes.front() == Node::Keyword::METHOD)
+        rootNode.addNode(parseSubroutine());
+      else
+        parsingError("A class dec can only contain class var decs or subroutines.");
+    }
+
+    // Close curly brace
+    consumeNode(rootNode, Node::Symbol::CLOSE_CURLY_BRACE, "A close curly brace must follow the last class var dec or subroutine.");
   }
 }

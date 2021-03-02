@@ -10,43 +10,43 @@ BOOST_AUTO_TEST_SUITE(LexerTestSuite)
 
 BOOST_AUTO_TEST_CASE(tokenizeJackFile_tests)
 {
-    Lexer::Tokens expectedTokens{
-        Lexer::Token(Lexer::TokenType::KEYWORD, "class"),
-        Lexer::Token(Lexer::TokenType::IDENTIFIER, "Main"),
-        Lexer::Token(Lexer::TokenType::SYMBOL, "{"),
-        Lexer::Token(Lexer::TokenType::KEYWORD, "function"),
-        Lexer::Token(Lexer::TokenType::KEYWORD, "void"),
-        Lexer::Token(Lexer::TokenType::IDENTIFIER, "main"),
-        Lexer::Token(Lexer::TokenType::SYMBOL, "("),
-        Lexer::Token(Lexer::TokenType::SYMBOL, ")"),
-        Lexer::Token(Lexer::TokenType::SYMBOL, "{"),
-        Lexer::Token(Lexer::TokenType::KEYWORD, "var"),
-        Lexer::Token(Lexer::TokenType::IDENTIFIER, "String"),
-        Lexer::Token(Lexer::TokenType::IDENTIFIER, "s"),
-        Lexer::Token(Lexer::TokenType::SYMBOL, "="),
-        Lexer::Token(Lexer::TokenType::STRING_CONST, "Hello, world!"),
-        Lexer::Token(Lexer::TokenType::SYMBOL, ";"),
-        Lexer::Token(Lexer::TokenType::KEYWORD, "var"),
-        Lexer::Token(Lexer::TokenType::KEYWORD, "int"),
-        Lexer::Token(Lexer::TokenType::IDENTIFIER, "i"),
-        Lexer::Token(Lexer::TokenType::SYMBOL, "="),
-        Lexer::Token(Lexer::TokenType::INTEGER_CONST, "1000"),
-        Lexer::Token(Lexer::TokenType::SYMBOL, ";"),
-        Lexer::Token(Lexer::TokenType::SYMBOL, "}"),
-        Lexer::Token(Lexer::TokenType::SYMBOL, "}"),
+    Node::TerminalNodes expectedNodes{
+        Node::TerminalNode(Node::TerminalNodeType::KEYWORD, "class"),
+        Node::TerminalNode(Node::TerminalNodeType::IDENTIFIER, "Main"),
+        Node::TerminalNode(Node::TerminalNodeType::SYMBOL, "{"),
+        Node::TerminalNode(Node::TerminalNodeType::KEYWORD, "function"),
+        Node::TerminalNode(Node::TerminalNodeType::KEYWORD, "void"),
+        Node::TerminalNode(Node::TerminalNodeType::IDENTIFIER, "main"),
+        Node::TerminalNode(Node::TerminalNodeType::SYMBOL, "("),
+        Node::TerminalNode(Node::TerminalNodeType::SYMBOL, ")"),
+        Node::TerminalNode(Node::TerminalNodeType::SYMBOL, "{"),
+        Node::TerminalNode(Node::TerminalNodeType::KEYWORD, "var"),
+        Node::TerminalNode(Node::TerminalNodeType::IDENTIFIER, "String"),
+        Node::TerminalNode(Node::TerminalNodeType::IDENTIFIER, "s"),
+        Node::TerminalNode(Node::TerminalNodeType::SYMBOL, "="),
+        Node::TerminalNode(Node::TerminalNodeType::STRING_CONST, "Hello, world!"),
+        Node::TerminalNode(Node::TerminalNodeType::SYMBOL, ";"),
+        Node::TerminalNode(Node::TerminalNodeType::KEYWORD, "var"),
+        Node::TerminalNode(Node::TerminalNodeType::KEYWORD, "int"),
+        Node::TerminalNode(Node::TerminalNodeType::IDENTIFIER, "i"),
+        Node::TerminalNode(Node::TerminalNodeType::SYMBOL, "="),
+        Node::TerminalNode(Node::TerminalNodeType::INTEGER_CONST, "1000"),
+        Node::TerminalNode(Node::TerminalNodeType::SYMBOL, ";"),
+        Node::TerminalNode(Node::TerminalNodeType::SYMBOL, "}"),
+        Node::TerminalNode(Node::TerminalNodeType::SYMBOL, "}"),
     };
-    Lexer::Tokens actualTokens = Lexer::tokenizeJackFile("test/LexerTest.jack");
+    Node::TerminalNodes actualNodes = Lexer::tokenizeJackFile("test/LexerTest.jack");
 
-    BOOST_TEST(actualTokens == expectedTokens);
+    BOOST_TEST(actualNodes == expectedNodes);
 }
 
 BOOST_AUTO_TEST_CASE(tokenizeJackFileToXML_tests)
 {
     std::ifstream inputXMLStream("test/MainTokens.xml");
     std::string expectedXML((std::istreambuf_iterator<char>(inputXMLStream)), (std::istreambuf_iterator<char>()));
-    Lexer::Tokens tokens = Lexer::tokenizeJackFile("test/Main.jack");
+    Node::TerminalNodes nodes = Lexer::tokenizeJackFile("test/Main.jack");
 
-    BOOST_TEST(Lexer::getXML(tokens) == expectedXML);
+    BOOST_TEST(Lexer::getXML(nodes) == expectedXML);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

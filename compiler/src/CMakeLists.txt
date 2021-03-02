@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.11...3.20)
 
-add_library(Jack-Compiler fs_utils.cpp lexer.cpp parser.cpp)
+add_library(Jack-Compiler fs_utils.cpp node.cpp lexer.cpp parser.cpp)
 target_compile_features(Jack-Compiler PRIVATE cxx_std_20)
 if (MSVC)
     target_compile_options(Jack-Compiler PRIVATE ${MSVC_WARNING_FLAGS})

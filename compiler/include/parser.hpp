@@ -1,45 +1,36 @@
 #pragma once
 
-#include <vector>
-#include <variant>
-
+#include "node.hpp"
 #include "lexer.hpp"
 
 namespace Parser
 {
-    enum class NonTerminalNodeType
-    {
-        CLASS,
-        CLASS_VAR_DEC,
-        SUBROUTINE_DEC,
-        PARAMETER_LIST,
-        SUBROUTINE_BODY,
-        VAR_DEC,
-        STATEMENTS,
-        WHILE_STATEMENT,
-        IF_STATEMENT,
-        RETURN_STATEMENT,
-        LET_STATEMENT,
-        DO_STATEMENT,
-        EXPRESSION,
-        TERM,
-        EXPRESSION_LIST
-    };
-
-    class NonTerminalNode;
-    typedef std::vector<std::variant<NonTerminalNode, Lexer::Token>> Nodes;
-
-    class NonTerminalNode
+    class Parser
     {
     private:
-        Nodes nodes;
-        NonTerminalNodeType nodeType;
-    
-    public:
-        NonTerminalNode(NonTerminalNodeType nodeType);
-        Nodes getNodes() const;
-        NonTerminalNodeType getNodeType() const;
-    };
+        Node::TerminalNodes nodes;
+        Node::NonTerminalNode rootNode {Node::NonTerminalNodeType::CLASS};
 
-    NonTerminalNode parseTokens(Lexer::Tokens tokens);
+        template <typename T>
+        void consumeNode(Node::NonTerminalNode node, const T nodeType, const std::string error);
+        void consumeNode(Node::NonTerminalNode node, const std::vector<std::variant<Node::Keyword, Node::Symbol, Node::TerminalNode>> allowedTypes, const std::string error);
+
+        Node::NonTerminalNode parseExpressionList();
+        Node::NonTerminalNode parseTerm();
+        Node::NonTerminalNode parseExpression();
+        Node::NonTerminalNode parseIf();
+        Node::NonTerminalNode parseReturn();
+        Node::NonTerminalNode parseWhile();
+        Node::NonTerminalNode parseLet();
+        Node::NonTerminalNode parseDo();
+        Node::NonTerminalNode parseStatements();
+        Node::NonTerminalNode parseVarDec();
+        Node::NonTerminalNode parseParameterList();
+        Node::NonTerminalNode parseSubroutine();
+        Node::NonTerminalNode parseClassVarDec();
+        void parseClass();
+
+    public:
+        Parser(Node::TerminalNodes tokens);
+    };
 }

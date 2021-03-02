@@ -60,10 +60,10 @@ int main(int, const char *argv[])
   for (fs::path path : inputPaths)
   {
     std::cout << "Compiling " << path << std::endl;
-    Lexer::Tokens tokens = Lexer::tokenizeJackFile(path);
+    Node::TerminalNodes nodes = Lexer::tokenizeJackFile(path);
     fs::path outputPath (path.replace_filename(path.stem().string() + ".xml"));
     std::ofstream outputFile(outputPath);
-    outputFile << Lexer::getXML(tokens);
+    outputFile << Lexer::getXML(nodes);
     outputFile.close();
   }
 
