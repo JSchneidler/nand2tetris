@@ -60,7 +60,7 @@ int main(int, const char *argv[]) {
   outputPath += ".xml";
 
   for (fs::path inputPath : inputPaths) {
-    const std::vector<Token> tokens = tokenizeJackFile(inputPath);
+    const Tokens tokens = tokenizeJackFile(inputPath);
   }
 
   return 0;

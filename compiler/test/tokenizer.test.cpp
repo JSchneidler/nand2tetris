@@ -1,7 +1,6 @@
 #define BOOST_TEST_MODULE TokenizerTests
 
 #include <boost/test/included/unit_test.hpp>
-#include <filesystem>
 
 #include "fs_utils.hpp"
 

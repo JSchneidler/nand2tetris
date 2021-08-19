@@ -6,7 +6,10 @@ project("Jack Compiler"
   LANGUAGES CXX
 )
 
+set (CMAKE_CXX_STANDARD 17)
+
 find_package(Boost 1.73 REQUIRED)
+include_directories(${Boost_INCLUDE_DIRS})
 
 add_subdirectory(src)
 

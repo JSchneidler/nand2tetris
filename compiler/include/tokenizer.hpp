@@ -26,4 +26,6 @@ class Token {
   friend std::ostream& operator<<(std::ostream& os, const Token& token);
 };
 
-std::vector<Token> tokenizeJackFile(const fs::path inputPath);
+typedef std::vector<Token> Tokens;
+
+Tokens tokenizeJackFile(const fs::path inputPath);
