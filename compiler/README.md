@@ -2,11 +2,12 @@
 
 This program compiles a .jack file or directory containing .jack files into Hack virtual machine code.
 
+## Prerequisites
+* [Poetry](https://python-poetry.org)
+
 ## Build
 
-1. `mkdir build && cd build`
-2. `cmake --configure ..`
-3. `cmake --build .`
+1. `poetry build`
 
 ## Usage
 
