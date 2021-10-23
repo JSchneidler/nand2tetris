@@ -29,7 +29,7 @@ def test_tokenizer_tokenizeFile_strings():
 def test_tokenizer_tokenizeFile_integers():
     # TODO: Add negative test cases
     tokens = tokenizeFile(Path("tests/tokenizer/integers.jack"))
-    assert len(tokens) == 6
+    assert len(tokens) == 9
 
 
 def test_tokenizer_tokenizeFile_identifiers():
