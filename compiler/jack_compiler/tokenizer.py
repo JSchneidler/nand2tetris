@@ -49,11 +49,11 @@ KEYWORDS = [
 
 
 class TokenType(Enum):
-    KEYWORD = 'keyword'
-    SYMBOL = 'symbol'
-    IDENTIFIER = 'identifier'
-    INTEGER_CONST = 'integer'
-    STRING_CONST = 'string'
+    KEYWORD = "keyword"
+    SYMBOL = "symbol"
+    IDENTIFIER = "identifier"
+    INTEGER_CONST = "integer"
+    STRING_CONST = "string"
 
 
 class Token:
@@ -66,7 +66,8 @@ class LexerException(Exception):
     pass
 
 
-def tokenizeFile(path: Path):
+def tokenizeFile(path: Path) -> list[Token]:
+    """Returns a list of Jack tokens given a file path."""
     tokens = []
     commentActive = False
     lineNumber = 0
@@ -89,11 +90,11 @@ def tokenizeFile(path: Path):
                     continue
 
                 # Otherwise split the remainder of the comment from the line
-                line = line[commentEnd + 2:]
+                line = line[commentEnd + 2 :]
                 commentActive = False
 
             # If no characters left, go to next line
-            line = line.lstrip()
+            line = line.strip()
             if len(line) == 0:
                 break
 
@@ -112,38 +113,59 @@ def tokenizeFile(path: Path):
                     continue
 
                 # Otherwise split the remainder of the comment from the line
-                line = line[commentEnd + 2:]
+                line = line[commentEnd + 2 :]
                 commentActive = False
 
-            # Check if symbol
+            # Check for integer constant
+            if line[0].isdigit() or line[0] == "-":
+                for i in range(len(line)):
+                    if line[i].isalpha():
+                        raise LexerException(
+                            "Invalid character found in integer constant on line "
+                            + lineNumber
+                        )
+                    elif not line[i].isdigit():
+                        integerValue = line[:i]
+                        line = line[i:]
+                        tokens.append(Token(TokenType.INTEGER_CONST, integerValue))
+                        break
+                continue
+
+            # Check for symbol
             if line[0] in SYMBOLS:
-                # Handle string constant
-                if line[0] == "\"":
-                    stringEnd = line.find("\"", 1)
-                    if stringEnd == -1:
-                        raise LexerException("Cannot find closing symbol for string constant on line " + lineNumber)
-                    tokens.append(Token(TokenType.STRING_CONST, line[:stringEnd]))
-                    line = line[stringEnd:]
-                # Handle other symbols
-                else:
-                    tokens.append(Token(TokenType.SYMBOL, line[0]))
-                    line = line[1:]
+                tokens.append(Token(TokenType.SYMBOL, line[0]))
+                # Splice token from line
+                line = line[1:]
+                continue
+
+            # Check for string constant
+            if line[0] == '"':
+                stringEnd = line.find('"', 1) + 1
+                if stringEnd == -1:
+                    raise LexerException(
+                        "Cannot find closing symbol for string constant on line "
+                        + lineNumber
+                    )
+                tokens.append(Token(TokenType.STRING_CONST, line[1:stringEnd]))
+                # Splice tokens from line
+                line = line[stringEnd:]
+                continue
 
             # Check for keyword
             for keyword in KEYWORDS:
                 if line.startswith(keyword):
-                    tokens.append(Token(TokenType.KEYWORD, line[0:len(keyword)]))
-                    line = line[len(keyword):]
+                    tokens.append(Token(TokenType.KEYWORD, line[0 : len(keyword)]))
+                    # Splice tokens from line
+                    line = line[len(keyword) :]
                     break
+            if len(line) == 0:
+                continue
 
-            # Check if integer constant
-            if line[0] == '-' or line[0].isdigit():
+            # Check for identifier
+            if False:
                 # TODO
-                pass
+                continue
 
-            # Check if identifier
-            if line[0].isalpha():
-                # TODO
-                pass
+            raise LexerException("Invalid character", line[0], line)
 
     return tokens
