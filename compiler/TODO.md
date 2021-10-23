@@ -1,0 +1,2 @@
+* Improve LexerException
+* Add logging
