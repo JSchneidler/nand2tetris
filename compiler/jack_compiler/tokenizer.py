@@ -61,6 +61,12 @@ class Token:
         self.type = type
         self.value = value
 
+    def getType(self):
+        return self.type
+
+    def getValue(self):
+        return self.value
+
 
 Tokens = list[Token]
 
@@ -118,8 +124,15 @@ def tokenizeFile(path: Path) -> Tokens:
                     commentActive = False
                     continue
 
+                # Check for symbol
+                if line[0] in SYMBOLS:
+                    tokens.append(Token(TokenType.SYMBOL, line[0]))
+                    # Splice token from line
+                    line = line[1:]
+                    continue
+
                 # Check for integer constant
-                if line[0].isdigit() or line[0] == "-":
+                if line[0].isdigit():
                     i = 0
                     for i in range(1, len(line)):
                         if line[i].isalpha():
@@ -131,13 +144,6 @@ def tokenizeFile(path: Path) -> Tokens:
                             break
                     line = line[i + 1 :]
                     tokens.append(Token(TokenType.INTEGER_CONST, line[: i + 1]))
-                    continue
-
-                # Check for symbol
-                if line[0] in SYMBOLS:
-                    tokens.append(Token(TokenType.SYMBOL, line[0]))
-                    # Splice token from line
-                    line = line[1:]
                     continue
 
                 # Check for string constant
