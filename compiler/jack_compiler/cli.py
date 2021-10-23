@@ -2,7 +2,7 @@ import argparse
 from pathlib import Path
 
 import fs_utils
-import lexer
+import tokenizer
 
 parser = argparse.ArgumentParser(description="CLI interface for Jack compiler")
 parser.add_argument(
@@ -32,4 +32,4 @@ print(jackFiles)
 print(outputPath)
 
 for file in jackFiles:
-    print(lexer.tokenizeFile(file))
+    print(tokenizer.tokenizeFile(file))
