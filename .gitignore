@@ -1,5 +1,5 @@
-.vscode
-*.exe
+.vscode/
+software/
 *.cmp
 *.tst
 *.out
@@ -7,5 +7,3 @@
 *.vm
 *.hack
 *.asm
-demo/
-00/
