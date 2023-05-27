@@ -27,7 +27,7 @@
 // if (out < 0) set ng = 1
 
 CHIP ALU {
-    IN  
+    IN
         x[16], y[16],  // 16-bit inputs        
         zx, // zero the x input?
         nx, // negate the x input?
@@ -36,19 +36,19 @@ CHIP ALU {
         f,  // compute out = x + y (if 1) or x & y (if 0)
         no; // negate the out output?
 
-    OUT 
+    OUT
         out[16], // 16-bit output
         zr, // 1 if (out == 0), 0 otherwise
         ng; // 1 if (out < 0),  0 otherwise
 
     PARTS:
-    Mux16(a=x, b=false, sel=zx, out=x1);
+    Mux16(a=x, b=false, sel=zx, out=x1); // if zx, x = 0
     Not16(in=x1, out=notx);
-    Mux16(a=x1, b=notx, sel=nx, out=x2);
+    Mux16(a=x1, b=notx, sel=nx, out=x2); // if nx, x = !x
 
-    Mux16(a=y, b=false, sel=zy, out=y1);
+    Mux16(a=y, b=false, sel=zy, out=y1); // if zy, y = 0
     Not16(in=y1, out=noty);
-    Mux16(a=y1, b=noty, sel=ny, out=y2);
+    Mux16(a=y1, b=noty, sel=ny, out=y2); // if ny, y = !y
 
     Add16(a=x2, b=y2, out=addxy);
     And16(a=x2, b=y2, out=andxy);
