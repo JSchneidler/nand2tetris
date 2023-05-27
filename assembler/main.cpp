@@ -1,11 +1,12 @@
 #include <bitset>
+#include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <stdexcept>
 #include "parser.hpp"
 #include "symboltable.hpp"
 
-static std::string generateOutputFilename(const std::string &inputFilename);
+static std::string generateOutputPath(const std::filesystem::path &inputPath);
 static std::string to15BitBinaryString(const int number);
 
 const int VARIABLE_STACK_BASE_ADDRESS{0x10};
@@ -17,8 +18,8 @@ int main(int, const char *argv[])
 
   int nextVariableStackAddress{VARIABLE_STACK_BASE_ADDRESS};
 
-  std::string inputFilename{argv[1]};
-  std::string outputFilename{generateOutputFilename(inputFilename)};
+  std::filesystem::path inputFilename{argv[1]};
+  std::string outputFilename{generateOutputPath(inputFilename)};
 
   std::ofstream outputFile{outputFilename};
 
@@ -73,10 +74,10 @@ int main(int, const char *argv[])
   return 0;
 }
 
-static std::string generateOutputFilename(const std::string &inputFilename)
+static std::string generateOutputPath(const std::filesystem::path &inputPath)
 {
-  size_t filenameEnd{inputFilename.find_first_of('.')};
-  return inputFilename.substr(0, filenameEnd) + ".hack";
+  std::filesystem::path outputPath{inputPath};
+  return outputPath.replace_extension(".hack").string();
 }
 
 static std::string to15BitBinaryString(const int number)
