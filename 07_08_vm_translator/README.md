@@ -1,6 +1,6 @@
 # Hack VM Translator
 
-This program compiles a file containing Hack virtual machine code into Hack assembly code.
+This program compiles Hack virtual machine code files into Hack assembly code.
 
 The hack virtual machine specifications are linked below:  
 [Part 1](http://www.cs.huji.ac.il/course/2002/nand2tet/docs/ch_7_vm_I.pdf)
@@ -12,10 +12,10 @@ The hack virtual machine specifications are linked below:
 
 ## Usage
 
-`vm_translator.exe input_file`  
-input_file - Path to the input file
+`vm_translator.exe input_path`  
+input_path - Path to .vm file or directory containing .vm files
 
-The program generates an output file with a `.asm` extension and a basename equal to the input file's.
+The program generates an output file with a `.asm` extension and a basename equal to the input path's.
 
 ## Architecture
 

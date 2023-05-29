@@ -1,8 +1,8 @@
 #include "parser.hpp"
 #include <iostream>
 #include <stdexcept>
+#include <boost/algorithm/string.hpp>
 
-static std::string trimWhitespace(const std::string &string);
 static std::string stripComment(const std::string &string);
 static bool isArithmeticInstruction(const std::string &string);
 static Parser::SEGMENTS parseSegmentType(const std::string &string);
@@ -15,9 +15,6 @@ Parser::Parser(std::string inputFilename)
       currentInstruction{},
       rawInstruction{""}
 {
-  if (!inputFile.good() || inputFile.bad() || inputFile.fail() ||
-      !inputFile.is_open())
-    throw std::runtime_error("Invalid input file");
   advanceInstruction();
 }
 
@@ -46,11 +43,15 @@ void Parser::advanceInstruction()
   std::string line;
   while (std::getline(inputFile, line))
   {
-    line = trimWhitespace(stripComment(line));
+    line = stripComment(line);
+    boost::trim(line);
+
     if (line == "")
       continue;
+
     rawInstruction = line;
     parseInstruction(line);
+
     return;
   }
   _moreInstructions = false;
@@ -164,17 +165,6 @@ bool operator!=(const Parser::Instruction &left,
                 const Parser::Instruction &right)
 {
   return !(left == right);
-}
-
-static std::string trimWhitespace(const std::string &string)
-{
-  if (string == "")
-    return string;
-
-  size_t stringBegin = string.find_first_not_of(" ");
-  size_t stringEnd = string.find_last_not_of(" ") + 1;
-
-  return string.substr(stringBegin, stringEnd - stringBegin);
 }
 
 static std::string stripComment(const std::string &string)
