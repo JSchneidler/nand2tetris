@@ -6,9 +6,6 @@
 #include "parser.hpp"
 #include "symboltable.hpp"
 
-static std::string generateOutputPath(const std::filesystem::path &inputPath);
-static std::string to15BitBinaryString(const int number);
-
 const int VARIABLE_STACK_BASE_ADDRESS{0x10};
 
 int main(int, const char *argv[])
@@ -18,13 +15,10 @@ int main(int, const char *argv[])
 
   int nextVariableStackAddress{VARIABLE_STACK_BASE_ADDRESS};
 
-  std::filesystem::path inputFilename{argv[1]};
-  std::string outputFilename{generateOutputPath(inputFilename)};
-
-  std::ofstream outputFile{outputFilename};
+  const std::filesystem::path inputPath{argv[1]};
 
   SymbolTable symbolTable{};
-  Parser parser{inputFilename};
+  Parser parser{inputPath};
 
   // First pass
   for (; parser.moreCommands(); parser.advanceCommand())
@@ -34,6 +28,10 @@ int main(int, const char *argv[])
       symbolTable.addSymbol(parser.getCommandSymbol(),
                             parser.getInstructionNumber() + 1);
   }
+
+  std::filesystem::path outputPath{inputPath};
+  outputPath.replace_extension(".hack");
+  std::ofstream outputFile{outputPath};
 
   // Second pass
   std::string machineInstruction;
@@ -55,7 +53,7 @@ int main(int, const char *argv[])
       else
         symbolValue = std::stoi(symbol);
 
-      machineInstruction = "0" + to15BitBinaryString(symbolValue);
+      machineInstruction = "0" + std::bitset<15>(symbolValue).to_string();
 
       outputFile << machineInstruction << std::endl;
     }
@@ -72,15 +70,4 @@ int main(int, const char *argv[])
   outputFile.close();
 
   return 0;
-}
-
-static std::string generateOutputPath(const std::filesystem::path &inputPath)
-{
-  std::filesystem::path outputPath{inputPath};
-  return outputPath.replace_extension(".hack").string();
-}
-
-static std::string to15BitBinaryString(const int number)
-{
-  return std::bitset<15>(number).to_string();
 }

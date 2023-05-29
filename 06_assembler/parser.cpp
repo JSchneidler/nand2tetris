@@ -1,6 +1,7 @@
 #include "parser.hpp"
 #include <iostream>
 #include <stdexcept>
+#include <boost/algorithm/string.hpp>
 
 Parser::Parser(const std::string &inputFilename)
     : inputFile(std::ifstream(inputFilename)),
@@ -60,7 +61,8 @@ void Parser::advanceCommand(bool init /*= false*/)
   std::string line;
   while (std::getline(inputFile, line))
   {
-    line = trim(stripComment(line));
+    line = stripComment(line);
+    boost::trim(line);
 
     if (line != "")
     {
@@ -133,17 +135,6 @@ void Parser::parseCommand(const std::string &line)
     // Parse comp field
     instructionCompField = compMap.at(line.substr(compStart, compEnd));
   }
-}
-
-// Trims sequences spaces off the beginning and end of a string
-std::string trim(const std::string &string)
-{
-  if (string == "")
-    return string;
-
-  size_t start{string.find_first_not_of(' ')};
-  size_t end{string.find_last_not_of(' ')};
-  return string.substr(start, (end - start + 1));
 }
 
 // Strips a comment off the end of a line

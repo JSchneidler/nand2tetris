@@ -80,7 +80,6 @@ const std::unordered_map<std::string, std::string> destMap = {
 const std::unordered_map<std::string, std::string> jmpMap = {
     {"JGT", "001"}, {"JEQ", "010"}, {"JGE", "011"}, {"JLT", "100"}, {"JNE", "101"}, {"JLE", "110"}, {"JMP", "111"}};
 
-std::string trim(const std::string &string);
 std::string stripComment(const std::string &string);
 
 #endif

@@ -1,9 +1,10 @@
 .vscode/
 software/
-*.cmp
-*.tst
-*.out
-*.html
-*.vm
-*.hack
 *.asm
+*.cmp
+*.hack
+*.html
+*.out
+*.plist
+*.tst
+*.vm
