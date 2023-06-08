@@ -254,9 +254,7 @@ std::string Translator::generateFnDeclInstruction(const std::string &symbol,
 
   std::string instruction{addLabel(/*symbolPrefix + "." + */ symbol)};
   for (int i = 0; i < localVars; i++)
-  {
     instruction += generatePushZeroToStackInstruction();
-  }
 
   return instruction;
 }

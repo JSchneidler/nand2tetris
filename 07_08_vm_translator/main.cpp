@@ -19,17 +19,17 @@ int main(int, const char *argv[])
 
   // Create list of files to read
   std::vector<std::filesystem::path> inputFiles;
-  if (!std::filesystem::is_directory(inputPath))
-  {
-    inputFiles.push_back(inputPath);
-  } else {
+  std::filesystem::path outputPath{std::filesystem::canonical(inputPath)};
+
+  if (std::filesystem::is_directory(inputPath))
     for (std::filesystem::path entry : std::filesystem::directory_iterator(inputPath))
       if (std::filesystem::is_regular_file(entry) && entry.extension() == ".vm")
-      inputFiles.push_back(entry);
+        inputFiles.push_back(entry);
+  else {
+    inputFiles.push_back(inputPath);
   }
 
   Translator translator{};
-  std::filesystem::path outputPath{inputPath};
   outputPath.replace_extension(".asm");
   std::ofstream outputFile{outputPath};
 
