@@ -149,8 +149,6 @@ def tokenizeFile(path: Path) -> Tokens:
                             raise TokenizerException(f"Invalid character found in integer constant on line {lineNumber}")
                         elif not line[i].isdigit():
                             break
-                        elif i == len(line) - 1: # If digit at end of line, increment i once more to not miss it
-                            i += 1
 
                     tokens.append(Token(TokenType.INTEGER_CONST, line[:i]))
                     line = line[i:]
@@ -182,8 +180,6 @@ def tokenizeFile(path: Path) -> Tokens:
                     for i in range(0, len(line)):
                         if not line[i].isalnum() and not line[i] == "_":
                             break
-                        elif i == len(line) - 1:
-                            i += 1 # If character at end of line, increment i once more to not miss it
 
                     tokens.append(Token(TokenType.IDENTIFIER, line[:i]))
                     line = line[i:]
