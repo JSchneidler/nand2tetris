@@ -9,9 +9,13 @@ This program compiles a .jack file or directory containing .jack files into Hack
 
 1. `poetry build`
 
+
+## Test
+1. `poetry run pytest`
+
 ## Usage
 
-`JackC.exe input_file`  
+`JackC input_file`  
 input_file - Path to a .jack file or directory containing one or more .jack files
 
 The program generates a `.vm` file in Hack virtual machine language.

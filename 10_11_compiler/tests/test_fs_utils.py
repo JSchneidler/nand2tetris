@@ -5,12 +5,12 @@ from jack_compiler import fs_utils
 
 def test_validateInputPath():
     # Success scenarios
-    fs_utils.validateInputPath(Path("tests/jackFiles"))
-    fs_utils.validateInputPath(Path("tests/jackFiles/"))
-    fs_utils.validateInputPath(Path("tests/jackFiles/Main.jack"))
-    fs_utils.validateInputPath(Path("./tests/jackFiles"))
-    fs_utils.validateInputPath(Path("./tests/jackFiles/"))
-    fs_utils.validateInputPath(Path("./tests/jackFiles/Main.jack"))
+    fs_utils.validateInputPath(Path("tests/jackFiles/ArrayTest"))
+    fs_utils.validateInputPath(Path("tests/jackFiles/ArrayTest/"))
+    fs_utils.validateInputPath(Path("tests/jackFiles/ArrayTest/Main.jack"))
+    fs_utils.validateInputPath(Path("./tests/jackFiles/ArrayTest"))
+    fs_utils.validateInputPath(Path("./tests/jackFiles/ArrayTest/"))
+    fs_utils.validateInputPath(Path("./tests/jackFiles/ArrayTest/Main.jack"))
 
     # Failure scenarios
     with pytest.raises(Exception):
@@ -66,8 +66,8 @@ def test_isJackFile():
 
 
 def test_getJackFilesInDirectory():
-    files = fs_utils.getJackFilesInDirectory(Path("tests/jackFiles"))
-    assert files == [Path("tests/jackFiles/Main.jack")]
+    files = fs_utils.getJackFilesInDirectory(Path("tests/jackFiles/ArrayTest"))
+    assert files == [Path("tests/jackFiles/ArrayTest/Main.jack")]
 
     files = fs_utils.getJackFilesInDirectory(Path("tests"))
     assert files == []

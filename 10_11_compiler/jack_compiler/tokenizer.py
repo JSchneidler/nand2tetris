@@ -1,5 +1,6 @@
 from enum import Enum
 from pathlib import Path
+from html import escape
 
 SYMBOLS = [
     "{",
@@ -21,6 +22,13 @@ SYMBOLS = [
     ">",
     "=",
     "~",
+]
+
+ENCODED_SYMBOLS = [
+    "<",
+    ">",
+    "&",
+    "\"",
 ]
 
 KEYWORDS = [
@@ -126,60 +134,81 @@ def tokenizeFile(path: Path) -> Tokens:
 
                 # Check for symbol
                 if line[0] in SYMBOLS:
-                    tokens.append(Token(TokenType.SYMBOL, line[0]))
-                    # Splice token from line
+                    value = line[0]
+                    if value in ENCODED_SYMBOLS:
+                        value = escape(value)
+                    tokens.append(Token(TokenType.SYMBOL, value))
                     line = line[1:]
                     continue
 
                 # Check for integer constant
                 if line[0].isdigit():
                     i = 0
-                    for i in range(1, len(line)):
+                    for i in range(0, len(line)):
                         if line[i].isalpha():
-                            raise TokenizerException(
-                                "Invalid character found in integer constant on line "
-                                + lineNumber
-                            )
+                            raise TokenizerException(f"Invalid character found in integer constant on line {lineNumber}")
                         elif not line[i].isdigit():
                             break
-                    line = line[i + 1 :]
-                    tokens.append(Token(TokenType.INTEGER_CONST, line[: i + 1]))
+                        elif i == len(line) - 1: # If digit at end of line, increment i once more to not miss it
+                            i += 1
+
+                    tokens.append(Token(TokenType.INTEGER_CONST, line[:i]))
+                    line = line[i:]
                     continue
 
                 # Check for string constant
                 if line[0] == '"':
-                    stringEnd = line.find('"', 1) + 1
+                    stringEnd = line.find('"', 1)
                     if stringEnd == -1:
-                        raise TokenizerException(
-                            "Cannot find closing symbol for string constant on line "
-                            + lineNumber
-                        )
+                        raise TokenizerException(f"Cannot find closing symbol for string constant on line {lineNumber}")
                     tokens.append(Token(TokenType.STRING_CONST, line[1:stringEnd]))
-                    # Splice tokens from line
-                    line = line[stringEnd:]
+                    line = line[stringEnd + 1:]
                     continue
 
                 # Check for keyword
+                found = False
                 for keyword in KEYWORDS:
                     if line.startswith(keyword):
-                        tokens.append(Token(TokenType.KEYWORD, line[0 : len(keyword)]))
-                        # Splice tokens from line
-                        line = line[len(keyword) :]
+                        found = True
+                        tokens.append(Token(TokenType.KEYWORD, keyword))
+                        line = line[len(keyword):]
                         break
-                if len(line) == 0:
+                if found:
                     continue
 
                 # Check for identifier
                 if line[0].isalpha() or line[0] == "_":
                     i = 0
-                    for i in range(1, len(line)):
-                        if not line[0].isalnum() and not line[0] == "_":
+                    for i in range(0, len(line)):
+                        if not line[i].isalnum() and not line[i] == "_":
                             break
+                        elif i == len(line) - 1:
+                            i += 1 # If character at end of line, increment i once more to not miss it
 
-                    tokens.append(Token(TokenType.IDENTIFIER, line[: i + 1]))
-                    line = line[i + 1 :]
+                    tokens.append(Token(TokenType.IDENTIFIER, line[:i]))
+                    line = line[i:]
                     continue
 
-                raise TokenizerException("Invalid character", line[0], line)
+                raise TokenizerException("Invalid character", line[i], line)
 
     return tokens
+
+
+def tokensToXML(tokens: Tokens) -> str:
+    """Converts a list of Jack tokens into XML"""
+    xml = "<tokens>\n"
+
+    for token in tokens:
+        type = token.getType()
+        if type == TokenType.STRING_CONST:
+            type = "stringConstant"
+        elif type == TokenType.INTEGER_CONST:
+            type = "integerConstant"
+        else:
+            type = type.value
+
+        xml += f"<{type}> {token.getValue()} </{type}>\n"
+
+    xml += "</tokens>\n"
+
+    return xml

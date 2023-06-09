@@ -1,11 +1,19 @@
 from pathlib import Path
-from jack_compiler.tokenizer import tokenizeFile, Tokens, TokenType
+from jack_compiler.tokenizer import tokenizeFile, tokensToXML, Tokens, TokenType
 
 
-def assertTokensType(tokens: Tokens, tokenType: TokenType):
+def countTokens(tokens: Tokens, tokenType: TokenType, count: int):
+    sum = 0
     for token in tokens:
-        assert token.getType() == tokenType
+        if token.getType() == tokenType:
+            sum += 1
 
+    assert count == sum
+
+
+def compareXML(xml: str, expectedXMLPath: Path):
+    with open(expectedXMLPath) as f:
+        assert xml == f.read()
 
 def test_tokenizer_tokenizeFile_comments():
     # TODO: Add negative test cases
@@ -16,33 +24,67 @@ def test_tokenizer_tokenizeFile_comments():
 def test_tokenizer_tokenizeFile_keywords():
     # TODO: Add negative test cases
     tokens = tokenizeFile(Path("tests/tokenizer/keywords.jack"))
-    assert len(tokens) == 21
-    assertTokensType(tokens, TokenType.KEYWORD)
+    countTokens(tokens, TokenType.KEYWORD, 21)
 
 
 def test_tokenizer_tokenizeFile_symbols():
     # TODO: Add negative test cases
     tokens = tokenizeFile(Path("tests/tokenizer/symbols.jack"))
-    assert len(tokens) == 19
-    assertTokensType(tokens, TokenType.SYMBOL)
+    countTokens(tokens, TokenType.SYMBOL, 19)
 
 
 def test_tokenizer_tokenizeFile_strings():
     # TODO: Add negative test cases
     tokens = tokenizeFile(Path("tests/tokenizer/strings.jack"))
-    assert len(tokens) == 5
-    assertTokensType(tokens, TokenType.STRING_CONST)
+    countTokens(tokens, TokenType.STRING_CONST, 5)
 
 
 def test_tokenizer_tokenizeFile_integers():
     # TODO: Add negative test cases
     tokens = tokenizeFile(Path("tests/tokenizer/integers.jack"))
-    assert len(tokens) == 6
-    assertTokensType(tokens, TokenType.INTEGER_CONST)
+    countTokens(tokens, TokenType.INTEGER_CONST, 6)
 
 
 def test_tokenizer_tokenizeFile_identifiers():
     # TODO: Add negative test cases
     tokens = tokenizeFile(Path("tests/tokenizer/identifiers.jack"))
-    assert len(tokens) == 9
-    assertTokensType(tokens, TokenType.IDENTIFIER)
+    countTokens(tokens, TokenType.IDENTIFIER, 9)
+
+def test_tokenizer_tokenizeFile_ArrayTest():
+    tokens = tokenizeFile(Path("tests/jackFiles/ArrayTest/Main.jack"))
+    xml = tokensToXML(tokens)
+    expectedXML = Path("tests/jackFiles/ArrayTest/MainT.xml")
+
+    compareXML(xml, expectedXML)
+
+def test_tokenizer_tokenizeFile_ExpressionLessSquare():
+    tokens = tokenizeFile(Path("tests/jackFiles/ExpressionLessSquare/Main.jack"))
+    xml = tokensToXML(tokens)
+    expectedXML = Path("tests/jackFiles/ExpressionLessSquare/MainT.xml")
+    compareXML(xml, expectedXML)
+
+    tokens = tokenizeFile(Path("tests/jackFiles/ExpressionLessSquare/Square.jack"))
+    xml = tokensToXML(tokens)
+    expectedXML = Path("tests/jackFiles/ExpressionLessSquare/SquareT.xml")
+    compareXML(xml, expectedXML)
+
+    tokens = tokenizeFile(Path("tests/jackFiles/ExpressionLessSquare/SquareGame.jack"))
+    xml = tokensToXML(tokens)
+    expectedXML = Path("tests/jackFiles/ExpressionLessSquare/SquareGameT.xml")
+    compareXML(xml, expectedXML)
+
+def test_tokenizer_tokenizeFile_Square():
+    tokens = tokenizeFile(Path("tests/jackFiles/Square/Main.jack"))
+    xml = tokensToXML(tokens)
+    expectedXML = Path("tests/jackFiles/Square/MainT.xml")
+    compareXML(xml, expectedXML)
+
+    tokens = tokenizeFile(Path("tests/jackFiles/Square/Square.jack"))
+    xml = tokensToXML(tokens)
+    expectedXML = Path("tests/jackFiles/Square/SquareT.xml")
+    compareXML(xml, expectedXML)
+
+    tokens = tokenizeFile(Path("tests/jackFiles/Square/SquareGame.jack"))
+    xml = tokensToXML(tokens)
+    expectedXML = Path("tests/jackFiles/Square/SquareGameT.xml")
+    compareXML(xml, expectedXML)
