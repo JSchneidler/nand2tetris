@@ -1,8 +1,7 @@
 import argparse
 from pathlib import Path
 
-import fs_utils
-import tokenizer
+from . import fs_utils, tokenizer, jack_parser
 
 parser = argparse.ArgumentParser(description="CLI interface for Jack compiler")
 parser.add_argument(
@@ -32,4 +31,6 @@ print(jackFiles)
 print(outputPath)
 
 for file in jackFiles:
-    print(tokenizer.tokenizeFile(file))
+    tokens = tokenizer.tokenizeFile(file)
+    parseTree = jack_parser.parseTokens(tokens)
+    print(parseTree)
