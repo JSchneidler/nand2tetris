@@ -1,6 +1,7 @@
+import logging
 from enum import Enum
-from pathlib import Path
 from html import escape
+from pathlib import Path
 
 SYMBOLS = [
     "{",
@@ -65,9 +66,11 @@ class TokenType(Enum):
 
 
 class Token:
-    def __init__(self, type: TokenType, value: str):
+    def __init__(self, type: TokenType, value: str, line: int, lineIndex: int):
         self.type = type
         self.value = value
+        self.line = line
+        self.lineIndex = lineIndex
 
     def getType(self):
         return self.type
@@ -89,10 +92,13 @@ def tokenizeFile(path: Path) -> Tokens:
     commentActive = False
 
     with path.open() as file:
+        logging.debug(f"Tokenizing file '{file.name}'")
+
         lineNumber = 0
         for line in file:
-            lineNumber += 1
             line = line.rstrip()
+            lineNumber += 1
+            lineIndex = 0
             while len(line) > 0:
                 # Is a multi-line comment active?
                 if commentActive:
@@ -134,11 +140,9 @@ def tokenizeFile(path: Path) -> Tokens:
 
                 # Check for symbol
                 if line[0] in SYMBOLS:
-                    value = line[0]
-                    if value in ENCODED_SYMBOLS:
-                        value = escape(value)
-                    tokens.append(Token(TokenType.SYMBOL, value))
+                    tokens.append(Token(TokenType.SYMBOL, line[0], lineNumber, lineIndex))
                     line = line[1:]
+                    lineIndex += 1
                     continue
 
                 # Check for integer constant
@@ -150,8 +154,9 @@ def tokenizeFile(path: Path) -> Tokens:
                         elif not line[i].isdigit():
                             break
 
-                    tokens.append(Token(TokenType.INTEGER_CONST, line[:i]))
+                    tokens.append(Token(TokenType.INTEGER_CONST, line[:i], lineNumber, lineIndex))
                     line = line[i:]
+                    lineIndex += 1
                     continue
 
                 # Check for string constant
@@ -159,8 +164,9 @@ def tokenizeFile(path: Path) -> Tokens:
                     stringEnd = line.find('"', 1)
                     if stringEnd == -1:
                         raise TokenizerException(f"Cannot find closing symbol for string constant on line {lineNumber}")
-                    tokens.append(Token(TokenType.STRING_CONST, line[1:stringEnd]))
+                    tokens.append(Token(TokenType.STRING_CONST, line[1:stringEnd], lineNumber, lineIndex))
                     line = line[stringEnd + 1:]
+                    lineIndex += 1
                     continue
 
                 # Check for keyword
@@ -168,8 +174,9 @@ def tokenizeFile(path: Path) -> Tokens:
                 for keyword in KEYWORDS:
                     if line.startswith(keyword):
                         found = True
-                        tokens.append(Token(TokenType.KEYWORD, keyword))
+                        tokens.append(Token(TokenType.KEYWORD, keyword, lineNumber, lineIndex))
                         line = line[len(keyword):]
+                        lineIndex += 1
                         break
                 if found:
                     continue
@@ -181,11 +188,12 @@ def tokenizeFile(path: Path) -> Tokens:
                         if not line[i].isalnum() and not line[i] == "_":
                             break
 
-                    tokens.append(Token(TokenType.IDENTIFIER, line[:i]))
+                    tokens.append(Token(TokenType.IDENTIFIER, line[:i], lineNumber, lineIndex))
                     line = line[i:]
+                    lineIndex += 1
                     continue
 
-                raise TokenizerException("Invalid character", line[i], line)
+                raise TokenizerException("Invalid character", line[0], line)
 
     return tokens
 
@@ -203,7 +211,10 @@ def tokensToXML(tokens: Tokens) -> str:
         else:
             type = type.value
 
-        xml += f"<{type}> {token.getValue()} </{type}>\n"
+        value = token.getValue()
+        if value in ENCODED_SYMBOLS:
+            value = escape(value)
+        xml += f"<{type}> {value} </{type}>\n"
 
     xml += "</tokens>\n"
 
