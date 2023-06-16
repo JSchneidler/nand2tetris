@@ -29,7 +29,7 @@ ENCODED_SYMBOLS = [
     "<",
     ">",
     "&",
-    "\"",
+    '"',
 ]
 
 KEYWORDS = [
@@ -61,8 +61,8 @@ class TokenType(Enum):
     KEYWORD = "keyword"
     SYMBOL = "symbol"
     IDENTIFIER = "identifier"
-    INTEGER_CONST = "integer"
-    STRING_CONST = "string"
+    INTEGER_CONST = "integerConstant"
+    STRING_CONST = "stringConstant"
 
 
 class Token:
@@ -140,7 +140,9 @@ def tokenizeFile(path: Path) -> Tokens:
 
                 # Check for symbol
                 if line[0] in SYMBOLS:
-                    tokens.append(Token(TokenType.SYMBOL, line[0], lineNumber, lineIndex))
+                    tokens.append(
+                        Token(TokenType.SYMBOL, line[0], lineNumber, lineIndex)
+                    )
                     line = line[1:]
                     lineIndex += 1
                     continue
@@ -150,11 +152,15 @@ def tokenizeFile(path: Path) -> Tokens:
                     i = 0
                     for i in range(0, len(line)):
                         if line[i].isalpha():
-                            raise TokenizerException(f"Invalid character found in integer constant on line {lineNumber}")
+                            raise TokenizerException(
+                                f"Invalid character found in integer constant on line {lineNumber}"
+                            )
                         elif not line[i].isdigit():
                             break
 
-                    tokens.append(Token(TokenType.INTEGER_CONST, line[:i], lineNumber, lineIndex))
+                    tokens.append(
+                        Token(TokenType.INTEGER_CONST, line[:i], lineNumber, lineIndex)
+                    )
                     line = line[i:]
                     lineIndex += 1
                     continue
@@ -163,9 +169,18 @@ def tokenizeFile(path: Path) -> Tokens:
                 if line[0] == '"':
                     stringEnd = line.find('"', 1)
                     if stringEnd == -1:
-                        raise TokenizerException(f"Cannot find closing symbol for string constant on line {lineNumber}")
-                    tokens.append(Token(TokenType.STRING_CONST, line[1:stringEnd], lineNumber, lineIndex))
-                    line = line[stringEnd + 1:]
+                        raise TokenizerException(
+                            f"Cannot find closing symbol for string constant on line {lineNumber}"
+                        )
+                    tokens.append(
+                        Token(
+                            TokenType.STRING_CONST,
+                            line[1:stringEnd],
+                            lineNumber,
+                            lineIndex,
+                        )
+                    )
+                    line = line[stringEnd + 1 :]
                     lineIndex += 1
                     continue
 
@@ -174,8 +189,10 @@ def tokenizeFile(path: Path) -> Tokens:
                 for keyword in KEYWORDS:
                     if line.startswith(keyword):
                         found = True
-                        tokens.append(Token(TokenType.KEYWORD, keyword, lineNumber, lineIndex))
-                        line = line[len(keyword):]
+                        tokens.append(
+                            Token(TokenType.KEYWORD, keyword, lineNumber, lineIndex)
+                        )
+                        line = line[len(keyword) :]
                         lineIndex += 1
                         break
                 if found:
@@ -188,7 +205,9 @@ def tokenizeFile(path: Path) -> Tokens:
                         if not line[i].isalnum() and not line[i] == "_":
                             break
 
-                    tokens.append(Token(TokenType.IDENTIFIER, line[:i], lineNumber, lineIndex))
+                    tokens.append(
+                        Token(TokenType.IDENTIFIER, line[:i], lineNumber, lineIndex)
+                    )
                     line = line[i:]
                     lineIndex += 1
                     continue
@@ -197,24 +216,19 @@ def tokenizeFile(path: Path) -> Tokens:
 
     return tokens
 
+def tokenToXML(token: Token) -> str:
+    type = token.getType().value
+    value = token.getValue()
+    if value in ENCODED_SYMBOLS:
+        value = escape(value)
+    return f"<{type}> {value} </{type}>\n"
 
 def tokensToXML(tokens: Tokens) -> str:
     """Converts a list of Jack tokens into XML"""
     xml = "<tokens>\n"
 
     for token in tokens:
-        type = token.getType()
-        if type == TokenType.STRING_CONST:
-            type = "stringConstant"
-        elif type == TokenType.INTEGER_CONST:
-            type = "integerConstant"
-        else:
-            type = type.value
-
-        value = token.getValue()
-        if value in ENCODED_SYMBOLS:
-            value = escape(value)
-        xml += f"<{type}> {value} </{type}>\n"
+        xml += tokenToXML(token)
 
     xml += "</tokens>\n"
 

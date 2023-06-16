@@ -52,39 +52,39 @@ def test_tokenizer_tokenizeFile_identifiers():
 
 def test_tokenizer_tokenizeFile_ArrayTest():
     tokens = tokenizeFile(Path("tests/jackFiles/ArrayTest/Main.jack"))
-    xml = tokensToXML(tokens)
     expectedXML = Path("tests/jackFiles/ArrayTest/MainT.xml")
+    xml = tokensToXML(tokens)
 
     compareXML(xml, expectedXML)
 
 def test_tokenizer_tokenizeFile_ExpressionLessSquare():
     tokens = tokenizeFile(Path("tests/jackFiles/ExpressionLessSquare/Main.jack"))
-    xml = tokensToXML(tokens)
     expectedXML = Path("tests/jackFiles/ExpressionLessSquare/MainT.xml")
+    xml = tokensToXML(tokens)
     compareXML(xml, expectedXML)
 
     tokens = tokenizeFile(Path("tests/jackFiles/ExpressionLessSquare/Square.jack"))
-    xml = tokensToXML(tokens)
     expectedXML = Path("tests/jackFiles/ExpressionLessSquare/SquareT.xml")
+    xml = tokensToXML(tokens)
     compareXML(xml, expectedXML)
 
     tokens = tokenizeFile(Path("tests/jackFiles/ExpressionLessSquare/SquareGame.jack"))
-    xml = tokensToXML(tokens)
     expectedXML = Path("tests/jackFiles/ExpressionLessSquare/SquareGameT.xml")
+    xml = tokensToXML(tokens)
     compareXML(xml, expectedXML)
 
 def test_tokenizer_tokenizeFile_Square():
     tokens = tokenizeFile(Path("tests/jackFiles/Square/Main.jack"))
-    xml = tokensToXML(tokens)
     expectedXML = Path("tests/jackFiles/Square/MainT.xml")
+    xml = tokensToXML(tokens)
     compareXML(xml, expectedXML)
 
     tokens = tokenizeFile(Path("tests/jackFiles/Square/Square.jack"))
-    xml = tokensToXML(tokens)
     expectedXML = Path("tests/jackFiles/Square/SquareT.xml")
+    xml = tokensToXML(tokens)
     compareXML(xml, expectedXML)
 
     tokens = tokenizeFile(Path("tests/jackFiles/Square/SquareGame.jack"))
-    xml = tokensToXML(tokens)
     expectedXML = Path("tests/jackFiles/Square/SquareGameT.xml")
+    xml = tokensToXML(tokens)
     compareXML(xml, expectedXML)

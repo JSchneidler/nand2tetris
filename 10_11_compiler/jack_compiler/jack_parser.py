@@ -1,8 +1,9 @@
 from __future__ import annotations
-from typing import Optional
-from enum import Enum
 
-from .tokenizer import Token, TokenType, Tokens
+from enum import Enum
+from typing import Optional
+
+from .tokenizer import Token, Tokens, TokenType, tokenToXML
 
 
 class NonTerminalType(Enum):
@@ -65,7 +66,9 @@ class Parser:
             or token.getValue() in ["int", "char", "boolean"]
         ):
             if shouldRaise:
-                raise ParserException(f"Expected valid type, not '{token.getValue()}' @ {token.line}.{token.lineIndex}")
+                raise ParserException(
+                    f"Expected valid type, not '{token.getValue()}' @ {token.line}.{token.lineIndex}"
+                )
             return False
         return True
 
@@ -126,13 +129,13 @@ class Parser:
         node.addChild(self.tokens[3])
 
         self.tokens = self.tokens[4:]
-        self.parseParameterList()
+        node.addChild(self.parseParameterList())
 
         assertToken(self.tokens[0], TokenType.SYMBOL, ")")
         node.addChild(self.tokens[0])
 
         self.tokens = self.tokens[1:]
-        self.parseSubroutineBody()
+        node.addChild(self.parseSubroutineBody())
 
         return node
 
@@ -140,7 +143,24 @@ class Parser:
         node = NonTerminalNode(NonTerminalType.PARAMETER_LIST)
 
         if self.checkType(self.tokens[0], False):
-            node.addChildren(self.parseGenericVarDec())
+            node.addChild(self.tokens[0])
+
+            assertToken(self.tokens[1], TokenType.IDENTIFIER)
+            node.addChild(self.tokens[1])
+
+            self.tokens = self.tokens[2:]
+            while True:
+                if self.tokens[0].getValue() == ",":
+                    node.addChild(self.tokens[0])
+
+                    self.checkType(self.tokens[1])
+                    node.addChild(self.tokens[1])
+
+                    assertToken(self.tokens[2], TokenType.IDENTIFIER)
+                    node.addChild(self.tokens[2])
+                    self.tokens = self.tokens[3:]
+                else:
+                    break
 
         return node
 
@@ -321,6 +341,7 @@ class Parser:
 
             assertToken(self.tokens[0], TokenType.SYMBOL, ")")
             tokens.append(self.tokens[0])
+            self.tokens = self.tokens[1:]
         elif self.tokens[1].getValue() == ".":
             assertToken(self.tokens[0], TokenType.IDENTIFIER)
             tokens.append(self.tokens[0])
@@ -427,7 +448,7 @@ class Parser:
 
             if self.tokens[0].getValue() == "[":
                 node.addChild(self.tokens[0])
-                
+
                 self.tokens = self.tokens[1:]
                 node.addChild(self.parseExpression())
 
@@ -499,3 +520,23 @@ class Parser:
 
 def parseTokens(tokens: Tokens) -> NonTerminalNode:
     return Parser(tokens).root
+
+def treeToXML(node: NonTerminalNode, depth: int = 0) -> str:
+    TAB_SIZE = 2
+    spacing = " " * depth * TAB_SIZE
+
+    xml = f"{spacing}<{node.type.value}>\n"
+
+    for child in node.children:
+        if isinstance(child, Token):
+            tokenXml = tokenToXML(child)
+            xml += (
+                f"{spacing}{' '*TAB_SIZE}{tokenXml}"
+            )
+        elif isinstance(child, NonTerminalNode):
+            xml += treeToXML(child, depth + 1)
+        else:
+            raise ParserException(f"Invalid child type '{type(child)}'")
+
+    xml += f"{spacing}</{node.type.value}>\n"
+    return xml

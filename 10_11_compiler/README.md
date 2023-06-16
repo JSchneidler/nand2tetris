@@ -15,10 +15,10 @@ This program compiles a .jack file or directory containing .jack files into Hack
 
 ## Usage
 
-`JackC input_file`  
-input_file - Path to a .jack file or directory containing one or more .jack files
+`python -m jack_compiler.cli <fileOrDir>`  
+fileOrDir - Path to a .jack file or directory containing one or more .jack files
 
-The program generates a `.vm` file in Hack virtual machine language.
+Generates one `.vm` file per class in Hack virtual machine language.
 
 ## Architecture
 

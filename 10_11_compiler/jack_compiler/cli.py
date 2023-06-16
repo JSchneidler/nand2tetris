@@ -27,10 +27,7 @@ elif fs_utils.isJackFile(inputPath):
 else:
     raise Exception(inputPath.name + " is not a .jack file")
 
-print(jackFiles)
-print(outputPath)
-
 for file in jackFiles:
     tokens = tokenizer.tokenizeFile(file)
     parseTree = jack_parser.parseTokens(tokens)
-    print(parseTree)
+    print(jack_parser.treeToXML(parseTree))
