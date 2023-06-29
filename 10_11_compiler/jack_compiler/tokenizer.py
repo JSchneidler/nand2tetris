@@ -78,6 +78,16 @@ class Token:
     def getValue(self):
         return self.value
 
+    def formatValue(self, value: str) -> str:
+        if value in ENCODED_SYMBOLS:
+            return escape(value)
+        return value
+
+    def toXML(self) -> str:
+        type = self.getType().value
+        return f"<{type}> {self.formatValue(self.getValue())} </{type}>"
+
+
 
 Tokens = list[Token]
 
@@ -216,19 +226,13 @@ def tokenizeFile(path: Path) -> Tokens:
 
     return tokens
 
-def tokenToXML(token: Token) -> str:
-    type = token.getType().value
-    value = token.getValue()
-    if value in ENCODED_SYMBOLS:
-        value = escape(value)
-    return f"<{type}> {value} </{type}>\n"
 
 def tokensToXML(tokens: Tokens) -> str:
     """Converts a list of Jack tokens into XML"""
     xml = "<tokens>\n"
 
     for token in tokens:
-        xml += tokenToXML(token)
+        xml += token.toXML() + "\n"
 
     xml += "</tokens>\n"
 

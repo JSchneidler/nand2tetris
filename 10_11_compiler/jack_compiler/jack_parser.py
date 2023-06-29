@@ -3,8 +3,8 @@ from __future__ import annotations
 from enum import Enum
 from typing import Optional
 
-from .tokenizer import Token, Tokens, TokenType, tokenToXML
-from .symbol_table import SymbolTable
+from .tokenizer import Token, Tokens, TokenType
+from .symbol_table import SymbolTable, SymbolKind, SymbolNotFound
 
 
 class NonTerminalType(Enum):
@@ -39,6 +39,48 @@ class NonTerminalNode:
         for child in children:
             self.addChild(child)
 
+    def toXML(self, depth: int = 0) -> str:
+        TAB_SIZE = 2
+        spacing = " " * depth * TAB_SIZE
+
+        xml = f"{spacing}<{self.type.value}>\n"
+
+        for child in self.children:
+            if isinstance(child, Token):
+                tokenXml = child.toXML()
+                xml += f"{spacing}{' '*TAB_SIZE}{tokenXml}\n"
+            elif isinstance(child, NonTerminalNode):
+                xml += child.toXML(depth + 1)
+            else:
+                raise ParserException(f"Invalid child type '{type(child)}'")
+
+        xml += f"{spacing}</{self.type.value}>\n"
+        return xml
+
+
+class IdentifierCategory(Enum):
+    LOCAL = "local"
+    ARGUMENT = "argument"
+    STATIC = "static"
+    FIELD = "field"
+    CLASS = "class"
+    SUBROUTINE = "subroutine"
+
+
+class IdentifierToken(Token):
+    def __init__(
+        self, token: Token, category: IdentifierCategory, isDefinition: bool, index: int
+    ):
+        super().__init__(token.type, token.value, token.line, token.lineIndex)
+
+        self.category = category
+        self.isDefinition = isDefinition
+        self.index = index
+
+    def toXML(self) -> str:
+        type = self.getType().value
+        return f"<{type} category={self.category.value} isDefinition={self.isDefinition} index={self.index}> {self.formatValue(self.getValue())} </{type}>"
+
 
 class ParserException(Exception):
     pass
@@ -53,8 +95,11 @@ class Parser:
     def __init__(self, tokens: Tokens):
         self.tokens = tokens
         self.tokenIndex = 0
+
+        self.classScope = True
         self.classSymbols = SymbolTable()
         self.subroutineSymbols = SymbolTable()
+
         self.root = self.parseClass()
 
     def checkType(self, token: Token, shouldRaise: Optional[bool] = True) -> bool:
@@ -74,12 +119,30 @@ class Parser:
         parentNode: NonTerminalNode,
         type: Optional[TokenType] = None,
         value: Optional[str] = None,
+        isIdentifierDefinition: bool = False,
+        identifierCategory: Optional[IdentifierCategory] = None
     ):
         token = self.tokens[self.tokenIndex]
         if (type and token.getType() != type) or (value and token.getValue() != value):
             raise ParserException(
                 f"Expected '{value or type.value}', not '{token.getValue()}' @ {token.line}.{token.lineIndex}"
             )
+        if token.getType() == TokenType.IDENTIFIER:
+            index = 0
+            kind = None
+            try:
+                symbol = self.subroutineSymbols.get(token.getValue())
+                kind = IdentifierCategory(symbol.kind.value)
+                index = symbol.index
+            except SymbolNotFound:
+                try:
+                    symbol = self.classSymbols.get(token.getValue())
+                    kind = IdentifierCategory(symbol.kind.value)
+                    index = symbol.index
+                except SymbolNotFound:
+                    kind = identifierCategory
+
+            token = IdentifierToken(token, kind, isIdentifierDefinition, index)
         parentNode.addChild(token)
         self.tokenIndex += 1
 
@@ -93,7 +156,7 @@ class Parser:
         node = NonTerminalNode(NonTerminalType.CLASS)
 
         self.consumeToken(node, TokenType.KEYWORD, "class")
-        self.consumeToken(node, TokenType.IDENTIFIER)
+        self.consumeToken(node, TokenType.IDENTIFIER, None, False, IdentifierCategory.CLASS)
         self.consumeToken(node, TokenType.SYMBOL, "{")
 
         while True:
@@ -104,6 +167,7 @@ class Parser:
                 "function",
                 "method",
             ]:
+                self.classScope = False
                 node.addChild(self.parseSubroutineDec())
             else:
                 break
@@ -116,25 +180,30 @@ class Parser:
         node = NonTerminalNode(NonTerminalType.CLASS_VAR_DEC)
 
         self.consumeToken(node, TokenType.KEYWORD)
-        self.parseGenericVarDec(node)
-        self.consumeToken(node, TokenType.SYMBOL, ";")
+        kind = self.tokens[self.tokenIndex - 1].getValue()
+        self.parseGenericVarDec(node, SymbolKind(kind))
 
         return node
 
     def parseSubroutineDec(self) -> NonTerminalNode:
+        self.subroutineSymbols.empty()
+
         node = NonTerminalNode(NonTerminalType.SUBROUTINE_DEC)
         self.consumeToken(node, TokenType.KEYWORD)
 
         if self.currentToken().getValue() == "void" or self.checkType(
             self.currentToken(), False
         ):
-            self.consumeToken(node)
+            if self.currentToken().getType() == TokenType.IDENTIFIER:
+                self.consumeToken(node, TokenType.IDENTIFIER, None, False, IdentifierCategory.CLASS)
+            else:
+                self.consumeToken(node)
         else:
             raise ParserException(
                 f"Expected valid type or 'void', not '{self.currentToken().getValue()}' @ {self.currentToken().line}.{self.currentToken().lineIndex}"
             )
 
-        self.consumeToken(node, TokenType.IDENTIFIER)
+        self.consumeToken(node, TokenType.IDENTIFIER, None, False, IdentifierCategory.SUBROUTINE)
         self.consumeToken(node, TokenType.SYMBOL, "(")
         node.addChild(self.parseParameterList())
         self.consumeToken(node, TokenType.SYMBOL, ")")
@@ -146,14 +215,26 @@ class Parser:
         node = NonTerminalNode(NonTerminalType.PARAMETER_LIST)
 
         if self.checkType(self.currentToken(), False):
-            self.consumeToken(node)
-            self.consumeToken(node, TokenType.IDENTIFIER)
+            type = self.currentToken().getValue()
+            if self.currentToken().getType() == TokenType.IDENTIFIER:
+                self.consumeToken(node, TokenType.IDENTIFIER, None, False, IdentifierCategory.CLASS)
+            else:
+                self.consumeToken(node)
+            name = self.currentToken().getValue()
+            self.subroutineSymbols.add(name, type, SymbolKind.ARGUMENT)
+            self.consumeToken(node, TokenType.IDENTIFIER, None, True)
             while True:
                 if self.currentToken().getValue() == ",":
                     self.consumeToken(node, TokenType.SYMBOL, ",")
                     self.checkType(self.currentToken())
-                    self.consumeToken(node)
-                    self.consumeToken(node, TokenType.IDENTIFIER)
+                    type = self.currentToken().getValue()
+                    if self.currentToken().getType() == TokenType.IDENTIFIER:
+                        self.consumeToken(node, TokenType.IDENTIFIER, None, False, IdentifierCategory.CLASS)
+                    else:
+                        self.consumeToken(node)
+                    name = self.currentToken().getValue()
+                    self.subroutineSymbols.add(name, type, SymbolKind.ARGUMENT)
+                    self.consumeToken(node, TokenType.IDENTIFIER, None, True)
                 else:
                     break
 
@@ -179,8 +260,7 @@ class Parser:
         node = NonTerminalNode(NonTerminalType.VAR_DEC)
 
         self.consumeToken(node, TokenType.KEYWORD, "var")
-        self.parseGenericVarDec(node)
-        self.consumeToken(node, TokenType.SYMBOL, ";")
+        self.parseGenericVarDec(node, SymbolKind.LOCAL)
 
         return node
 
@@ -264,14 +344,14 @@ class Parser:
 
     def parseSubroutineCall(self, parentNode: NonTerminalNode):
         if self.getNthToken(1).getValue() == "(":
-            self.consumeToken(parentNode, TokenType.IDENTIFIER)
+            self.consumeToken(parentNode, TokenType.IDENTIFIER, None, False, IdentifierCategory.SUBROUTINE)
             self.consumeToken(parentNode, TokenType.SYMBOL, "(")
             parentNode.addChild(self.parseExpressionList())
             self.consumeToken(parentNode, TokenType.SYMBOL, ")")
         elif self.getNthToken(1).getValue() == ".":
-            self.consumeToken(parentNode, TokenType.IDENTIFIER)
+            self.consumeToken(parentNode, TokenType.IDENTIFIER, None, False, IdentifierCategory.CLASS)
             self.consumeToken(parentNode, TokenType.SYMBOL, ".")
-            self.consumeToken(parentNode, TokenType.IDENTIFIER)
+            self.consumeToken(parentNode, TokenType.IDENTIFIER, None, False, IdentifierCategory.SUBROUTINE)
             self.consumeToken(parentNode, TokenType.SYMBOL, "(")
             parentNode.addChild(self.parseExpressionList())
             self.consumeToken(parentNode, TokenType.SYMBOL, ")")
@@ -349,18 +429,30 @@ class Parser:
 
         return node
 
-    def parseGenericVarDec(self, parentNode: NonTerminalNode):
-        self.checkType(self.currentToken())
+    def parseGenericVarDec(self, parentNode: NonTerminalNode, kind: SymbolKind):
+        symbolTable = self.classSymbols if self.classScope else self.subroutineSymbols
 
-        self.consumeToken(parentNode)
-        self.consumeToken(parentNode, TokenType.IDENTIFIER)
+        self.checkType(self.currentToken())
+        type = self.currentToken().getValue()
+        if self.currentToken().getType() == TokenType.IDENTIFIER:
+            self.consumeToken(parentNode, TokenType.IDENTIFIER, None, False, IdentifierCategory.CLASS)
+        else:
+            self.consumeToken(parentNode)
+        name = self.currentToken().getValue()
+        symbolTable.add(name, type, kind)
+        self.consumeToken(parentNode, TokenType.IDENTIFIER, None, True)
 
         while True:
             if self.currentToken().getValue() == ",":
+                type = self.currentToken().getValue()
                 self.consumeToken(parentNode)
-                self.consumeToken(parentNode, TokenType.IDENTIFIER)
+                name = self.currentToken().getValue()
+                symbolTable.add(name, type, kind)
+                self.consumeToken(parentNode, TokenType.IDENTIFIER, None, True)
             else:
                 break
+
+        self.consumeToken(parentNode, TokenType.SYMBOL, ";")
 
     def isExpression(self) -> bool:
         return self.isTerm()
@@ -403,22 +495,3 @@ class Parser:
 
 def parseTokens(tokens: Tokens) -> NonTerminalNode:
     return Parser(tokens).root
-
-
-def treeToXML(node: NonTerminalNode, depth: int = 0) -> str:
-    TAB_SIZE = 2
-    spacing = " " * depth * TAB_SIZE
-
-    xml = f"{spacing}<{node.type.value}>\n"
-
-    for child in node.children:
-        if isinstance(child, Token):
-            tokenXml = tokenToXML(child)
-            xml += f"{spacing}{' '*TAB_SIZE}{tokenXml}"
-        elif isinstance(child, NonTerminalNode):
-            xml += treeToXML(child, depth + 1)
-        else:
-            raise ParserException(f"Invalid child type '{type(child)}'")
-
-    xml += f"{spacing}</{node.type.value}>\n"
-    return xml

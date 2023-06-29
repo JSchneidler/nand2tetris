@@ -13,7 +13,7 @@ def compile(file: Path):
 
     tokens = tokenizer.tokenizeFile(file)
     parseTree = jack_parser.parseTokens(tokens)
-    xml = jack_parser.treeToXML(parseTree)
+    xml = parseTree.toXML()
 
     with open(outputPath, "w") as outputFile:
         outputFile.write(xml)
