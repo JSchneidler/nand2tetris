@@ -3,8 +3,9 @@ from __future__ import annotations
 from enum import Enum
 from typing import Optional
 
+from .symbol_table import SymbolKind, SymbolNotFound, SymbolTable
 from .tokenizer import Token, Tokens, TokenType
-from .symbol_table import SymbolTable, SymbolKind, SymbolNotFound
+from .vm_writer import writeCall, writeFunction, writeReturn
 
 
 class NonTerminalType(Enum):
@@ -96,11 +97,16 @@ class Parser:
         self.tokens = tokens
         self.tokenIndex = 0
 
+        self.className = None
         self.classScope = True
         self.classSymbols = SymbolTable()
         self.subroutineSymbols = SymbolTable()
 
+        self.vmOutput = ""
         self.root = self.parseClass()
+
+    def writeVM(self, vm: str):
+        self.vmOutput += vm + "\n"
 
     def checkType(self, token: Token, shouldRaise: Optional[bool] = True) -> bool:
         if not (
@@ -120,7 +126,7 @@ class Parser:
         type: Optional[TokenType] = None,
         value: Optional[str] = None,
         isIdentifierDefinition: bool = False,
-        identifierCategory: Optional[IdentifierCategory] = None
+        identifierCategory: Optional[IdentifierCategory] = None,
     ):
         token = self.tokens[self.tokenIndex]
         if (type and token.getType() != type) or (value and token.getValue() != value):
@@ -156,7 +162,10 @@ class Parser:
         node = NonTerminalNode(NonTerminalType.CLASS)
 
         self.consumeToken(node, TokenType.KEYWORD, "class")
-        self.consumeToken(node, TokenType.IDENTIFIER, None, False, IdentifierCategory.CLASS)
+        self.className = self.currentToken().getValue()
+        self.consumeToken(
+            node, TokenType.IDENTIFIER, None, False, IdentifierCategory.CLASS
+        )
         self.consumeToken(node, TokenType.SYMBOL, "{")
 
         while True:
@@ -195,7 +204,9 @@ class Parser:
             self.currentToken(), False
         ):
             if self.currentToken().getType() == TokenType.IDENTIFIER:
-                self.consumeToken(node, TokenType.IDENTIFIER, None, False, IdentifierCategory.CLASS)
+                self.consumeToken(
+                    node, TokenType.IDENTIFIER, None, False, IdentifierCategory.CLASS
+                )
             else:
                 self.consumeToken(node)
         else:
@@ -203,42 +214,62 @@ class Parser:
                 f"Expected valid type or 'void', not '{self.currentToken().getValue()}' @ {self.currentToken().line}.{self.currentToken().lineIndex}"
             )
 
-        self.consumeToken(node, TokenType.IDENTIFIER, None, False, IdentifierCategory.SUBROUTINE)
+        subroutineName = self.currentToken().getValue()
+        self.consumeToken(
+            node, TokenType.IDENTIFIER, None, True, IdentifierCategory.SUBROUTINE
+        )
         self.consumeToken(node, TokenType.SYMBOL, "(")
-        node.addChild(self.parseParameterList())
+        (childNode, nParameters) = self.parseParameterList()
+        node.addChild(childNode)
+
+        self.writeVM(
+            writeFunction(f"{self.className}.{subroutineName}", nParameters + 1)
+        )
+
         self.consumeToken(node, TokenType.SYMBOL, ")")
         node.addChild(self.parseSubroutineBody())
 
         return node
 
-    def parseParameterList(self) -> NonTerminalNode:
+    def parseParameterList(self) -> tuple[NonTerminalNode, int]:
         node = NonTerminalNode(NonTerminalType.PARAMETER_LIST)
+        nParameters = 0
 
         if self.checkType(self.currentToken(), False):
             type = self.currentToken().getValue()
             if self.currentToken().getType() == TokenType.IDENTIFIER:
-                self.consumeToken(node, TokenType.IDENTIFIER, None, False, IdentifierCategory.CLASS)
+                self.consumeToken(
+                    node, TokenType.IDENTIFIER, None, False, IdentifierCategory.CLASS
+                )
             else:
                 self.consumeToken(node)
             name = self.currentToken().getValue()
             self.subroutineSymbols.add(name, type, SymbolKind.ARGUMENT)
             self.consumeToken(node, TokenType.IDENTIFIER, None, True)
+            nParameters += 1
             while True:
                 if self.currentToken().getValue() == ",":
                     self.consumeToken(node, TokenType.SYMBOL, ",")
                     self.checkType(self.currentToken())
                     type = self.currentToken().getValue()
                     if self.currentToken().getType() == TokenType.IDENTIFIER:
-                        self.consumeToken(node, TokenType.IDENTIFIER, None, False, IdentifierCategory.CLASS)
+                        self.consumeToken(
+                            node,
+                            TokenType.IDENTIFIER,
+                            None,
+                            False,
+                            IdentifierCategory.CLASS,
+                        )
                     else:
                         self.consumeToken(node)
                     name = self.currentToken().getValue()
                     self.subroutineSymbols.add(name, type, SymbolKind.ARGUMENT)
                     self.consumeToken(node, TokenType.IDENTIFIER, None, True)
+                    nParameters += 1
                 else:
                     break
 
-        return node
+        return (node, nParameters)
 
     def parseSubroutineBody(self) -> NonTerminalNode:
         node = NonTerminalNode(NonTerminalType.SUBROUTINE_BODY)
@@ -343,22 +374,46 @@ class Parser:
         return node
 
     def parseSubroutineCall(self, parentNode: NonTerminalNode):
+        fn = ""
+        nArgs = 0
         if self.getNthToken(1).getValue() == "(":
-            self.consumeToken(parentNode, TokenType.IDENTIFIER, None, False, IdentifierCategory.SUBROUTINE)
+            fn = self.currentToken().getValue()
+            self.consumeToken(
+                parentNode,
+                TokenType.IDENTIFIER,
+                None,
+                False,
+                IdentifierCategory.SUBROUTINE,
+            )
             self.consumeToken(parentNode, TokenType.SYMBOL, "(")
-            parentNode.addChild(self.parseExpressionList())
+            (node, nArgs) = self.parseExpressionList()
+            parentNode.addChild(node)
             self.consumeToken(parentNode, TokenType.SYMBOL, ")")
         elif self.getNthToken(1).getValue() == ".":
-            self.consumeToken(parentNode, TokenType.IDENTIFIER, None, False, IdentifierCategory.CLASS)
+            className = self.currentToken().getValue()
+            self.consumeToken(
+                parentNode, TokenType.IDENTIFIER, None, False, IdentifierCategory.CLASS
+            )
             self.consumeToken(parentNode, TokenType.SYMBOL, ".")
-            self.consumeToken(parentNode, TokenType.IDENTIFIER, None, False, IdentifierCategory.SUBROUTINE)
+            subroutineName = self.currentToken().getValue()
+            fn = f"{className}.{subroutineName}"
+            self.consumeToken(
+                parentNode,
+                TokenType.IDENTIFIER,
+                None,
+                False,
+                IdentifierCategory.SUBROUTINE,
+            )
             self.consumeToken(parentNode, TokenType.SYMBOL, "(")
-            parentNode.addChild(self.parseExpressionList())
+            (node, nArgs) = self.parseExpressionList()
+            parentNode.addChild(node)
             self.consumeToken(parentNode, TokenType.SYMBOL, ")")
         else:
             raise ParserException(
                 f"Expected valid subroutine identifier, not '{self.currentToken().getValue()}' @ {self.currentToken().line}.{self.currentToken().lineIndex}"
             )
+
+        self.writeVM(writeCall(fn, nArgs))
 
     def parseReturnStatement(self) -> NonTerminalNode:
         node = NonTerminalNode(NonTerminalType.RETURN_STATEMENT)
@@ -367,6 +422,8 @@ class Parser:
         if self.isTerm():
             node.addChild(self.parseExpression())
         self.consumeToken(node, TokenType.SYMBOL, ";")
+
+        self.writeVM(writeReturn())
 
         return node
 
@@ -384,19 +441,22 @@ class Parser:
 
         return node
 
-    def parseExpressionList(self) -> NonTerminalNode:
+    def parseExpressionList(self) -> tuple[NonTerminalNode, int]:
         node = NonTerminalNode(NonTerminalType.EXPRESSION_LIST)
+        nArgs = 0
 
         if self.isExpression():
             node.addChild(self.parseExpression())
+            nArgs += 1
             while True:
                 if self.currentToken().getValue() == ",":
                     self.consumeToken(node, TokenType.SYMBOL, ",")
                     node.addChild(self.parseExpression())
+                    nArgs += 1
                 else:
                     break
 
-        return node
+        return (node, nArgs)
 
     def parseTerm(self) -> NonTerminalNode:
         node = NonTerminalNode(NonTerminalType.TERM)
@@ -435,7 +495,9 @@ class Parser:
         self.checkType(self.currentToken())
         type = self.currentToken().getValue()
         if self.currentToken().getType() == TokenType.IDENTIFIER:
-            self.consumeToken(parentNode, TokenType.IDENTIFIER, None, False, IdentifierCategory.CLASS)
+            self.consumeToken(
+                parentNode, TokenType.IDENTIFIER, None, False, IdentifierCategory.CLASS
+            )
         else:
             self.consumeToken(parentNode)
         name = self.currentToken().getValue()
@@ -491,7 +553,3 @@ class Parser:
             (self.isClassName() or self.isVarName())
             and self.getNthToken(1).getValue() == "."
         )
-
-
-def parseTokens(tokens: Tokens) -> NonTerminalNode:
-    return Parser(tokens).root

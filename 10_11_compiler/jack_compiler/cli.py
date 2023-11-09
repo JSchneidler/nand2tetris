@@ -12,8 +12,8 @@ def compile(file: Path):
     outputPath = Path(file.stem + ".xml")
 
     tokens = tokenizer.tokenizeFile(file)
-    parseTree = jack_parser.parseTokens(tokens)
-    xml = parseTree.toXML()
+    parseTree = jack_parser.Parser(tokens)
+    xml = parseTree.root.toXML()
 
     with open(outputPath, "w") as outputFile:
         outputFile.write(xml)
